@@ -6,25 +6,27 @@ from ij.gui import GenericDialog
 from ij.plugin import ImageCalculator
 import datetime
 
-experimentFolder = str(experimentFolder)
-# Get a list of all scans inside the experimentFolder and save them as a list
+experimentFolder = str(experimentFolder) #changes the selected directory into a string for future use
+
+# Get a list of all scan folders inside the experimentFolder and save them as a list called scanList
 def list_scans(experimentFolder):
     scanList = []
-    for scan in os.listdir(experimentFolder):
-        if os.path.isdir(os.path.join(experimentFolder, scan)):
+    for scan in os.listdir(experimentFolder): #gets a list of all the names inside experimentFolder
+        if os.path.isdir(os.path.join(experimentFolder, scan)): #if the name is a directory, get the full path to it and add to scanList
             scanList.append(os.path.join(experimentFolder, scan))
     return scanList
 
-# check to see if directories already exist. If not, make them. Needs to be passed the full path from "scan" in "main()"
+# check to see if directories already exist. If not, make them. Needs to be passed the full path to the scan
 def make_directories(scan):
     # defining all the paths to the output folders
-    processed = os.path.join(scan, "processed")
+    processed = os.path.join(scan, "processed") #this is where your processed data will go
     raw = os.path.join(processed, "raw")
     diff = os.path.join(processed, "diff")
     MAX = os.path.join(processed, "MAX")
     filteredMAX = os.path.join(MAX, "filteredMAX")
     rawMAX = os.path.join(MAX, "rawMAX")
-    directories = [processed, raw, diff, filteredMAX, rawMAX]
+    directories = [processed, raw, diff, filteredMAX, rawMAX] # a list of all the paths to the directories
+    
     # check to see if the folders exist, if not, make them
     for d in directories:
         if os.path.exists(d):
@@ -36,16 +38,19 @@ def make_directories(scan):
     print "Finished creating directories!"
     return directories
 
+#Uses Bio-formats importer to import a hyperstack from an xml file. The xml file must have the same name as the scan
+# Gets basename of the scan from run_it() function
 def make_hyperstack(scan, basename):
     print basename
     xmlFile = basename + ".xml"
-    xmlFile = os.path.join(scan, xmlFile)
+    xmlFile = os.path.join(scan, xmlFile) #makes path to the xml file
     print "Opening file"
     IJ.run("Bio-Formats Importer", "open=" + xmlFile + " color_mode=Default concatenate_series open_all_series rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT")
     print "File opened"
     imp = IJ.getImage()
     imp.setTitle(basename + "_raw.tif")
 
+#Runs the channel splitter if it detects multiple channels.
 def split_channels(directories, channels):
     imp = IJ.getImage()
     if channels >1:
@@ -54,14 +59,16 @@ def split_channels(directories, channels):
         print "Only one channel, bypassing channel splitter..."
         imp = IJ.getImage()
         windowName = imp.getTitle()
-        imp = imp.setTitle("C1-" + windowName)
+        imp = imp.setTitle("C1-" + windowName) #just renames the window
 
+    #saving the hyperstacks
     image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
     for i in image_titles:
         imp = WindowManager.getImage(i)
         windowName = imp.getTitle()
         IJ.saveAsTiff(imp, os.path.join(directories[1], windowName))
 
+# If there are more than one z-slice, runs the max projector function. Else, returns and error and quits the program
 def make_MAX(directories, x):
     image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
     for i in image_titles:
@@ -70,14 +77,16 @@ def make_MAX(directories, x):
         	print "oops, cannot z-project"
         	IJ.run("Close All")
         	raise Exception("Not a stack!")   
+        
         IJ.run(imp, "Z Project...", "projection=[Max Intensity] all")
         imp = WindowManager.getImage("MAX_" + i)
         windowName = imp.getTitle()
-        IJ.saveAsTiff(imp, os.path.join(directories[x], windowName))
+        IJ.saveAsTiff(imp, os.path.join(directories[x], windowName)) #saves to rawMAX directory. Passed the directory from run_it()
         imp = WindowManager.getImage(i)
-        imp.changes = False
+        imp.changes = False #Answers "no" to the dialog asking if you want to save any changes
         imp.close()
 
+#If there is more than one channel, runs merge_channels. Else skips this step 
 def merge_channels(basename, channels, directories, x):
     image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
     if channels >1:
@@ -89,28 +98,31 @@ def merge_channels(basename, channels, directories, x):
         imp = WindowManager.getImage("Merged")
         imp.setTitle("Merged_" + basename)
         windowName = imp.getTitle()
-        IJ.saveAsTiff(imp, os.path.join(directories[x], windowName))
+        IJ.saveAsTiff(imp, os.path.join(directories[x], windowName)) #saves to rawMAX. Passed directory from run_it()
         IJ.run("Close All")
     else:
         print "Only 1 channel, skipping merge..."
         IJ.run("Close All")
     print "Closing all files..."
 
+# Opens up the raw hyperstacks and runs a median filter
 def median_filter(rawFiles, directories):
     for f in rawFiles:
-        IJ.open(os.path.join(directories[1], f))
+        IJ.open(os.path.join(directories[1], f)) #this opens anything in the raw directory. If there are random files, this might cause problems
     image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
     for i in image_titles:
         imp = WindowManager.getImage(i)
         IJ.run(imp, "Median...", "radius =1 stack")
-        windowName = WindowManager.getImage(i).getTitle().replace("raw", "filtered")
+        windowName = WindowManager.getImage(i).getTitle().replace("raw", "filtered") #save as _filtered.tif extension
         imp.setTitle(windowName)
 
+# Based on the number you put in in the beginning dialogue box, it will remove slices to make a difference movie
+# This function looks in filteredMAX to make the movies, but you can always point it to the rawMAX if you prever
 def make_difference(directories, x, differenceNumber):
     print "Making Difference movies..."
-    for file in os.listdir(directories[3]):
+    for file in os.listdir(directories[x]): #opens up the MAX files in filteredMAX
         if "MAX" in file:
-            IJ.open(os.path.join(directories[3], file))
+            IJ.open(os.path.join(directories[x], file))
     image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
     for i in image_titles:
         imp = WindowManager.getImage(i)
@@ -120,36 +132,38 @@ def make_difference(directories, x, differenceNumber):
         dup.show()
         dup.setTitle(windowName + "_dup")
 
-        differenceNumberString = str(differenceNumber)
+        differenceNumberString = str(differenceNumber) #turns the integer input into a string (str)
 
         for n in range(1, differenceNumber+1):
             if n >= 1:
                 IJ.run(imp, "Delete Slice", "")
 
         dup = WindowManager.getImage(windowName + "_dup")
-        IJ.run(dup,"Reverse", "")
+        IJ.run(dup,"Reverse", "") #reverse the array so that the slices in the back become the front
 
         for n in range(1, differenceNumber+1):
             if n >= 1:
                 IJ.run(dup, "Delete Slice", "")
 
-        IJ.run(dup, "Reverse", "")
+        IJ.run(dup, "Reverse", "") #reverse the array back to native orientation
         calc = ImageCalculator()
         impDiff = calc.calculate("Subtract create stack", imp, dup)
         impDiff = WindowManager.getImage("Result of "+ windowName)
         windowName = impDiff.getTitle().replace("Result of ", "Diff" + differenceNumberString + "-")
         impDiff.setTitle(windowName)
-        IJ.saveAsTiff(impDiff, os.path.join(directories[x], windowName))
-        impDiff.changes = False
-        imp.changes = False
-        dup.changes = False
+        IJ.saveAsTiff(impDiff, os.path.join(directories[x], windowName)) #saves in diff folder
+        impDiff.changes = False #Answers "no" to the dialog asking if you want to save any changes
+        imp.changes = False #Answers "no" to the dialog asking if you want to save any changes
+        dup.changes = False #Answers "no" to the dialog asking if you want to save any changes
         impDiff.close()
         imp.close()
         dup.close()
         print "Finished making difference movies..."
 
+# the main function that calls all the other functions
 def run_it():
-    errorFilePath = os.path.join(experimentFolder, "errorFile.txt")
+    print "ARE YOU READY TO RUMBLE?!"
+    errorFilePath = os.path.join(experimentFolder, "errorFile.txt") #makes an error log file path
     scanList = list_scans(experimentFolder) # gets a list of all the scan paths in experiment folder
     for scan in scanList:
     	try:
@@ -158,39 +172,38 @@ def run_it():
             directories = make_directories(scan)
             make_hyperstack(scan, basename)
             imp = IJ.getImage()
-            channels = imp.getNChannels()
+            channels = imp.getNChannels() #gets the number of channels
             print "The number of channels is", channels
             split_channels(directories, channels)
             make_MAX(directories, 4)
             print "Making rawMAX merge"
             merge_channels(basename, channels, directories, 4) #makes rawMAX merge (the 4 determines where it saves)
             
-
-            # processing stream to make filtered images
-            #print "Making filtered movies..."
+            # processing stream to make filtered images. Comment out if you dont want to make any.
+            print "Making filtered movies..."
             rawFiles = os.listdir(directories[1])
             median_filter(rawFiles, directories)
             make_MAX(directories, 3)
             merge_channels(basename, channels, directories, 3)
 
 
-            #make difference movie
-            print "Making difference movies..."
+            # Make difference movies. As it stands, it currently looks in directories[2] aka filteredMAX. 
+            #If you commented out that stream or want them for the rawMAX, change the number to 4
             make_difference(directories, 2, differenceNumber)
-        except:
+        except:  #if there is an exception to the above code, create or append to an errorFile with the traceback
             print "Error with ", basename, "continuing on..."
             if os.path.exists(errorFilePath):
-                append_write = "a"
+                append_write = "a" #if the file exists, append to it
             else:
-                append_write = "w"
+                append_write = "w" #if the file doesn't exist, it must be written
 
-            now = datetime.datetime.now() #gets the current date and time
+            now = datetime.datetime.now() # gets the current date and time
             errorFile = open(errorFilePath, append_write)
             errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n")
             errorFile.write("Error with " + basename + "\n")
             traceback.print_exc(file = errorFile)
             errorFile.close()
             IJ.run("Close All")
-            continue
+            continue #continue on with the next scan, even if the current one threw an error
 run_it()
 print "The fahkin script is ovah bub..."
