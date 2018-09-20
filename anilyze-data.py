@@ -197,16 +197,14 @@ def run_it():
             #If you commented out that stream or want them for the rawMAX, change the number to 4
             make_difference(directories, 3, differenceNumber)
             
+            errorFile = open(errorFilePath "a")
+            errorFile.write("\nCongrats, you finished without error!")
+            errorFile.close()
         
         except:  #if there is an exception to the above code, create or append to an errorFile with the traceback
             print "Error with ", basename, "continuing on..."
-            
-            if os.path.exists(errorFilePath):
-                append_write = "a" #if the file exists, append to it
-            else:
-                append_write = "w" #if the file doesn't exist, it must be written
-
-            errorFile = open(errorFilePath, append_write)
+ 
+            errorFile = open(errorFilePath, "a")
             errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n") #writes the date and time
             errorFile.write("You fucked it up\n")
             errorFile.write("Error with " + basename + "\n")
