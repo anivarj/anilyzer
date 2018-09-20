@@ -160,7 +160,6 @@ def make_difference(directories, x, differenceNumber):
         impDiff.close()
         imp.close()
         dup.close()
-        print "Finished making difference movies..."
 
 # the main function that calls all the other functions
 def run_it():
@@ -215,7 +214,7 @@ def run_it():
             continue #continue on with the next scan, even if the current one threw an error
             
     errorFile = open(errorFilePath, "a")
-    errorFile.write("\nThe fahkin script is ovah bub...\n")
+    errorFile.write("\nDone with script.\n")
     errorFile.close()
 run_it()
 print "Done with script"
