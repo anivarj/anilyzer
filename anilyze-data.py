@@ -206,8 +206,8 @@ def run_it():
  
             errorFile = open(errorFilePath, "a")
             errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n") #writes the date and time
-            errorFile.write("\nYou fucked it up\n")
-            errorFile.write("Error with " + basename + "\n")
+            errorFile.write("You fucked it up\n")
+            errorFile.write("\nError with " + basename + "\n")
             traceback.print_exc(file = errorFile)
             errorFile.close()
             IJ.run("Close All")
