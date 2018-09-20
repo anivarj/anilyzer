@@ -1,6 +1,6 @@
 # @File(label = "Input directory", style = "directory") experimentFolder
 # @Integer(label = "Slices to remove for difference movie", value = 4) differenceNumber
-import os, sys, traceback
+import os, sys, traceback, shutil
 from ij import IJ, WindowManager, ImagePlus
 from ij.gui import GenericDialog
 from ij.plugin import ImageCalculator
@@ -30,7 +30,7 @@ def make_directories(scan):
     for d in directories:
         if os.path.exists(processed):
             print "The directory'", processed, "'already exists! Overwriting..."
-            os.remove(processed)
+            shutil.rmtree(processed)
             os.makedirs(d)
         else:
             os.makedirs(d)
