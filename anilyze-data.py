@@ -153,7 +153,7 @@ def make_difference(directories, x, differenceNumber):
         impDiff = WindowManager.getImage("Result of "+ windowName)
         windowName = impDiff.getTitle().replace("Result of ", "Diff" + differenceNumberString + "-")
         impDiff.setTitle(windowName)
-        IJ.saveAsTiff(impDiff, os.path.join(directories[4], windowName)) #saves in diff folder
+        IJ.saveAsTiff(impDiff, os.path.join(directories[2], windowName)) #saves in diff folder
         impDiff.changes = False #Answers "no" to the dialog asking if you want to save any changes
         imp.changes = False #Answers "no" to the dialog asking if you want to save any changes
         dup.changes = False #Answers "no" to the dialog asking if you want to save any changes
