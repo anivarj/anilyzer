@@ -197,7 +197,7 @@ def run_it():
             #If you commented out that stream or want them for the rawMAX, change the number to 4
             make_difference(directories, 3, differenceNumber)
             
-            errorFile = open(errorFilePath "a")
+            errorFile = open(errorFilePath, "a")
             errorFile.write("Congrats, you finished without error!\n")
             errorFile.close()
         
