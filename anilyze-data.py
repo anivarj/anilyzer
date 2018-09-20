@@ -1,6 +1,6 @@
 # @File(label = "Input directory", style = "directory") experimentFolder
 # @Integer(label = "Slices to remove for difference movie", value = 4) differenceNumber
-import os, sys, traceback
+import os, sys, traceback, shutil
 from ij import IJ, WindowManager, ImagePlus
 from ij.gui import GenericDialog
 from ij.plugin import ImageCalculator
@@ -27,14 +27,17 @@ def make_directories(scan):
     rawMAX = os.path.join(MAX, "rawMAX")
     directories = [processed, raw, diff, filteredMAX, rawMAX] # a list of all the paths to the directories
     
-    # check to see if the folders exist, if not, make them
-    for d in directories:
-        if os.path.exists(d):
-            base = os.path.basename(d)
-            print "The directory'", base, "'already exists!"
-        else:
+    if os.path.exists(processed):
+        print "The directory", processed, "already exists! Overwriting..."
+        shutil.rmtree(processed)
+        for d in directories:
             os.makedirs(d)
             print d, "created"
+    else:
+        for d in directories:
+            os.makedirs(d)
+            print d, "created"
+    
     print "Finished creating directories!"
     return directories
 
@@ -119,7 +122,6 @@ def median_filter(rawFiles, directories):
 # Based on the number you put in in the beginning dialogue box, it will remove slices to make a difference movie
 # This function looks in filteredMAX to make the movies, but you can always point it to the rawMAX if you prever
 def make_difference(directories, x, differenceNumber):
-    print "Making Difference movies..."
     for file in os.listdir(directories[x]): #opens up the MAX files in filteredMAX
         if "MAX" in file:
             IJ.open(os.path.join(directories[x], file))
@@ -151,19 +153,23 @@ def make_difference(directories, x, differenceNumber):
         impDiff = WindowManager.getImage("Result of "+ windowName)
         windowName = impDiff.getTitle().replace("Result of ", "Diff" + differenceNumberString + "-")
         impDiff.setTitle(windowName)
-        IJ.saveAsTiff(impDiff, os.path.join(directories[x], windowName)) #saves in diff folder
+        IJ.saveAsTiff(impDiff, os.path.join(directories[2], windowName)) #saves in diff folder
         impDiff.changes = False #Answers "no" to the dialog asking if you want to save any changes
         imp.changes = False #Answers "no" to the dialog asking if you want to save any changes
         dup.changes = False #Answers "no" to the dialog asking if you want to save any changes
         impDiff.close()
         imp.close()
         dup.close()
-        print "Finished making difference movies..."
 
 # the main function that calls all the other functions
 def run_it():
-    print "ARE YOU READY TO RUMBLE?!"
     errorFilePath = os.path.join(experimentFolder, "errorFile.txt") #makes an error log file path
+    now = datetime.datetime.now() # gets the current date and time
+    errorFile = open(errorFilePath, "w")
+    errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n") #writes the date and time
+    errorFile.write("Here we go...don't fuck it up...\n")
+    errorFile.close()
+            
     scanList = list_scans(experimentFolder) # gets a list of all the scan paths in experiment folder
     for scan in scanList:
     	try:
@@ -186,24 +192,29 @@ def run_it():
             make_MAX(directories, 3)
             merge_channels(basename, channels, directories, 3)
 
-
             # Make difference movies. As it stands, it currently looks in directories[2] aka filteredMAX. 
             #If you commented out that stream or want them for the rawMAX, change the number to 4
-            make_difference(directories, 2, differenceNumber)
+            print "Making difference movies..."
+            make_difference(directories, 3, differenceNumber)
+            
+            errorFile = open(errorFilePath, "a")
+            errorFile.write("Congrats, you didn't fuck it up!\n")
+            errorFile.close()
+        
         except:  #if there is an exception to the above code, create or append to an errorFile with the traceback
             print "Error with ", basename, "continuing on..."
-            if os.path.exists(errorFilePath):
-                append_write = "a" #if the file exists, append to it
-            else:
-                append_write = "w" #if the file doesn't exist, it must be written
-
-            now = datetime.datetime.now() # gets the current date and time
-            errorFile = open(errorFilePath, append_write)
-            errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n")
-            errorFile.write("Error with " + basename + "\n")
+ 
+            errorFile = open(errorFilePath, "a")
+            errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n") #writes the date and time
+            errorFile.write("You fucked it up\n")
+            errorFile.write("\nError with " + basename + "\n")
             traceback.print_exc(file = errorFile)
             errorFile.close()
             IJ.run("Close All")
             continue #continue on with the next scan, even if the current one threw an error
+            
+    errorFile = open(errorFilePath, "a")
+    errorFile.write("\nDone with script.\n")
+    errorFile.close()
 run_it()
-print "The fahkin script is ovah bub..."
+print "Done with script"
