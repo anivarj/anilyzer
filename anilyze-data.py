@@ -28,7 +28,7 @@ def make_directories(scan):
     directories = [processed, raw, diff, filteredMAX, rawMAX] # a list of all the paths to the directories
     
     if os.path.exists(processed):
-        print "The directory'", processed, "'already exists! Overwriting..."
+        print "The directory", processed, "already exists! Overwriting..."
         shutil.rmtree(processed)
         for d in directories:
             os.makedirs(d)
