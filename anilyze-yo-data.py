@@ -164,15 +164,15 @@ def make_difference(directories, x, differenceNumber):
 def run_it():
     errorFilePath = os.path.join(experimentFolder, "errorFile.txt") #makes an error log file path
     if os.path.exists(errorFilePath):
-                append_write = "a" #if the file exists, append to it
-            else:
-                append_write = "w" #if the file doesn't exist, it must be written
+        append_write = "a" #if the file exists, append to it
+    else:
+        append_write = "w" #if the file doesn't exist, it must be written
 
-            now = datetime.datetime.now() # gets the current date and time
-            errorFile = open(errorFilePath, append_write)
-            errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n") #writes the date and time
-            errorFile.write("Here we go...don't fuck shit up...\n")
-            errorFile.close()
+    now = datetime.datetime.now() # gets the current date and time
+    errorFile = open(errorFilePath, append_write)
+    errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n") #writes the date and time
+    errorFile.write("Here we go...don't fuck shit up...\n")
+    errorFile.close()
             
     scanList = list_scans(experimentFolder) # gets a list of all the scan paths in experiment folder
     for scan in scanList:
