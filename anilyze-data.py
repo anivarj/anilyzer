@@ -27,14 +27,15 @@ def make_directories(scan):
     rawMAX = os.path.join(MAX, "rawMAX")
     directories = [processed, raw, diff, filteredMAX, rawMAX] # a list of all the paths to the directories
     
-    for d in directories:
-        if os.path.exists(processed):
-            print "The directory'", processed, "'already exists! Overwriting..."
-            shutil.rmtree(processed)
-            os.makedirs(d)
-        else:
+    if os.path.exists(processed):
+        print "The directory'", processed, "'already exists! Overwriting..."
+        shutil.rmtree(processed)
+        os.makedirs(d)
+    else:
+        for d in directories:
             os.makedirs(d)
             print d, "created"
+    
     print "Finished creating directories!"
     return directories
 
@@ -218,5 +219,5 @@ def run_it():
             continue #continue on with the next scan, even if the current one threw an error
             
     errorFile = open(errorFilePath, append_write)
-    errorFile.write("\nThe fahkin script is ovah bub...")
+    errorFile.write("\nThe fahkin script is ovah bub...\n")
 run_it()
