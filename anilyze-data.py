@@ -165,13 +165,8 @@ def make_difference(directories, x, differenceNumber):
 # the main function that calls all the other functions
 def run_it():
     errorFilePath = os.path.join(experimentFolder, "errorFile.txt") #makes an error log file path
-    if os.path.exists(errorFilePath):
-        append_write = "a" #if the file exists, append to it
-    else:
-        append_write = "w" #if the file doesn't exist, it must be written
-
     now = datetime.datetime.now() # gets the current date and time
-    errorFile = open(errorFilePath, append_write)
+    errorFile = open(errorFilePath, "w")
     errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n") #writes the date and time
     errorFile.write("Here we go...don't fuck it up...\n")
     errorFile.close()
@@ -220,6 +215,6 @@ def run_it():
             IJ.run("Close All")
             continue #continue on with the next scan, even if the current one threw an error
             
-    errorFile = open(errorFilePath, append_write)
+    errorFile = open(errorFilePath, "a")
     errorFile.write("\nThe fahkin script is ovah bub...\n")
 run_it()
