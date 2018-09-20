@@ -27,11 +27,11 @@ def make_directories(scan):
     rawMAX = os.path.join(MAX, "rawMAX")
     directories = [processed, raw, diff, filteredMAX, rawMAX] # a list of all the paths to the directories
     
-    # check to see if the folders exist, if not, make them
     for d in directories:
-        if os.path.exists(d):
-            base = os.path.basename(d)
-            print "The directory'", base, "'already exists!"
+        if os.path.exists(processed):
+            print "The directory'", processed, "'already exists! Overwriting..."
+            os.remove(processed)
+            os.makedirs(d)
         else:
             os.makedirs(d)
             print d, "created"
