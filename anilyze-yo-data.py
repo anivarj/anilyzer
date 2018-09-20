@@ -202,7 +202,13 @@ def run_it():
         
         except:  #if there is an exception to the above code, create or append to an errorFile with the traceback
             print "Error with ", basename, "continuing on..."
-            #errorFile = open(errorFilePath, append_write)
+            
+            if os.path.exists(errorFilePath):
+                append_write = "a" #if the file exists, append to it
+            else:
+                append_write = "w" #if the file doesn't exist, it must be written
+
+            errorFile = open(errorFilePath, append_write)
             errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n") #writes the date and time
             errorFile.write("You fucked it up\n")
             errorFile.write("Error with " + basename + "\n")
@@ -210,6 +216,7 @@ def run_it():
             errorFile.close()
             IJ.run("Close All")
             continue #continue on with the next scan, even if the current one threw an error
-     
+            
+    errorFile = open(errorFilePath, append_write)
     errorFile.write("\nThe fahkin script is ovah bub...")
 run_it()
