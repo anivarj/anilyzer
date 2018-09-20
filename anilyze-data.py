@@ -215,4 +215,6 @@ def run_it():
             
     errorFile = open(errorFilePath, "a")
     errorFile.write("\nThe fahkin script is ovah bub...\n")
+    errorFile.close()
 run_it()
+print "Done with script"
