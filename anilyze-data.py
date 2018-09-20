@@ -30,7 +30,9 @@ def make_directories(scan):
     if os.path.exists(processed):
         print "The directory'", processed, "'already exists! Overwriting..."
         shutil.rmtree(processed)
-        os.makedirs(d)
+        for d in directories:
+            os.makedirs(d)
+            print d, "created"
     else:
         for d in directories:
             os.makedirs(d)
