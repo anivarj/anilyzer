@@ -198,7 +198,7 @@ def run_it():
             make_difference(directories, 3, differenceNumber)
             
             errorFile = open(errorFilePath, "a")
-            errorFile.write("Congrats, you finished without error!\n")
+            errorFile.write("Congrats, you didn't fuck it up!\n")
             errorFile.close()
         
         except:  #if there is an exception to the above code, create or append to an errorFile with the traceback
