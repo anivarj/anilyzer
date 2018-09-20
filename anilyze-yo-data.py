@@ -119,7 +119,6 @@ def median_filter(rawFiles, directories):
 # Based on the number you put in in the beginning dialogue box, it will remove slices to make a difference movie
 # This function looks in filteredMAX to make the movies, but you can always point it to the rawMAX if you prever
 def make_difference(directories, x, differenceNumber):
-    print "Making Difference movies..."
     for file in os.listdir(directories[x]): #opens up the MAX files in filteredMAX
         if "MAX" in file:
             IJ.open(os.path.join(directories[x], file))
@@ -171,7 +170,7 @@ def run_it():
     now = datetime.datetime.now() # gets the current date and time
     errorFile = open(errorFilePath, append_write)
     errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n") #writes the date and time
-    errorFile.write("Here we go...don't fuck shit up...\n")
+    errorFile.write("Here we go...don't fuck it up...\n")
     errorFile.close()
             
     scanList = list_scans(experimentFolder) # gets a list of all the scan paths in experiment folder
@@ -203,7 +202,7 @@ def run_it():
         
         except:  #if there is an exception to the above code, create or append to an errorFile with the traceback
             print "Error with ", basename, "continuing on..."
-            errorFile = open(errorFilePath, append_write)
+            #errorFile = open(errorFilePath, append_write)
             errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n") #writes the date and time
             errorFile.write("You fucked it up\n")
             errorFile.write("Error with " + basename + "\n")
@@ -211,5 +210,6 @@ def run_it():
             errorFile.close()
             IJ.run("Close All")
             continue #continue on with the next scan, even if the current one threw an error
+     
+    errorFile.write("\nThe fahkin script is ovah bub...")
 run_it()
-print "The fahkin script is ovah bub..."
