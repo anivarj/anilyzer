@@ -195,6 +195,7 @@ def run_it():
 
             # Make difference movies. As it stands, it currently looks in directories[2] aka filteredMAX. 
             #If you commented out that stream or want them for the rawMAX, change the number to 4
+            print "Making difference movies..."
             make_difference(directories, 3, differenceNumber)
             
             errorFile = open(errorFilePath, "a")
