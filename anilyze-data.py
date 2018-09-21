@@ -95,9 +95,9 @@ def merge_channels(basename, channels, directories, x):
     if channels >1:
         print "Found", channels, "channels...merging them together...."
         if channels == 2:
-            IJ.run("Merge Channels...", "c1=" + image_titles[0] + " c2=" + image_titles[1] + " create keep")
+            IJ.run("Merge Channels...", "c1=[" + image_titles[0] + "] c2=[" + image_titles[1] + "] create keep")
         if channels == 3:
-            IJ.run("Merge Channels...", "c1=" + image_titles[0] + " c2=" + image_titles[1] + " c3=" + image_titles[2] + " create keep")
+            IJ.run("Merge Channels...", "c1=[" + image_titles[0] + "] c2=[" + image_titles[1] + "] c3=[" + image_titles[2] + "] create keep")
         imp = WindowManager.getImage("Merged")
         imp.setTitle("Merged_" + basename)
         windowName = imp.getTitle()
