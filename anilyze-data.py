@@ -7,7 +7,6 @@ from ij.plugin import ImageCalculator
 import datetime
 
 experimentFolder = str(experimentFolder) #changes the selected directory into a string for future use
-experimentFolder = experimentFolder.replace(" ", "\\ ") #replaces any spaces in path with slashes
 
 # Get a list of all scan folders inside the experimentFolder and save them as a list called scanList
 def list_scans(experimentFolder):
@@ -45,11 +44,11 @@ def make_directories(scan):
 #Uses Bio-formats importer to import a hyperstack from an xml file. The xml file must have the same name as the scan
 # Gets basename of the scan from run_it() function
 def make_hyperstack(scan, basename):
-    print basename
+    print "basename is", basename
     xmlFile = basename + ".xml"
     xmlFile = os.path.join(scan, xmlFile) #makes path to the xml file
     print "Opening file"
-    IJ.run("Bio-Formats Importer", "open=" + xmlFile + " color_mode=Default concatenate_series open_all_series rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT")
+    IJ.run("Bio-Formats Importer", "open=[" + xmlFile + "] color_mode=Default concatenate_series open_all_series rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT")
     print "File opened"
     imp = IJ.getImage()
     imp.setTitle(basename + "_raw.tif")
