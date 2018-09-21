@@ -7,6 +7,7 @@ from ij.plugin import ImageCalculator
 import datetime
 
 experimentFolder = str(experimentFolder) #changes the selected directory into a string for future use
+experimentFolder = experimentFolder.replace(" ", "\\ ") #replaces any spaces in path with slashes
 
 # Get a list of all scan folders inside the experimentFolder and save them as a list called scanList
 def list_scans(experimentFolder):
