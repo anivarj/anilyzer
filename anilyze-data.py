@@ -1,6 +1,6 @@
 # @File(label = "Input directory", style = "directory") experimentFolder
 # @Integer(label = "Slices to remove for difference movie", value = 4) differenceNumber
-import os, sys, traceback, shutil
+import os, sys, traceback, shutil, glob
 from ij import IJ, WindowManager, ImagePlus
 from ij.gui import GenericDialog
 from ij.plugin import ImageCalculator
@@ -45,10 +45,13 @@ def make_directories(scan):
 # Gets basename of the scan from run_it() function
 def make_hyperstack(scan, basename):
     print "basename is", basename
-    xmlFile = basename + ".xml"
-    xmlFile = os.path.join(scan, xmlFile) #makes path to the xml file
+    #xmlFile = basename + ".xml"
+    #xmlFile = os.path.join(scan, xmlFile) #makes path to the xml file
+    firstFileName = basename + "_Cycle00001_Ch?_000001.ome.tif"
+    firstFilePath = os.path.join(scan, firstFileName)
+    firstFile = glob.glob(firstFilePath)
     print "Opening file"
-    IJ.run("Bio-Formats Importer", "open=[" + xmlFile + "] color_mode=Default concatenate_series open_all_series rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT")
+    IJ.run("Bio-Formats Importer", "open=[" + firstFile[0] + "] color_mode=Default concatenate_series open_all_series rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT")
     print "File opened"
     imp = IJ.getImage()
     imp.setTitle(basename + "_raw.tif")
@@ -194,8 +197,9 @@ def run_it():
 
             # Make difference movies. As it stands, it currently looks in directories[2] aka filteredMAX. 
             #If you commented out that stream or want them for the rawMAX, change the number to 4
-            print "Making difference movies..."
-            make_difference(directories, 3, differenceNumber)
+            if differenceNumber >0: 
+                print "Making difference movies..."
+                make_difference(directories, 3, differenceNumber)
             
             errorFile = open(errorFilePath, "a")
             errorFile.write("Congrats, you didn't fuck it up!\n")
