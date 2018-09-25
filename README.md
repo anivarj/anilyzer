@@ -11,7 +11,7 @@ If errors occur, they will be logged in a file called errorFile, located in the 
 
 COMMON ERRORS:
 
-XML File problems: If you have an extra partial slice on the end of your xml file, this will throw an error. Delete the <Sequence></Sequence> section in your xml file.
+Extra slices: If you have an extra partial slice from stopping the acquisition manually, this might throw an error at MAX projecting and/or produce extra files if it tries to run them through the stream. 
 
 Stack problems: If the script finds a movie that does not have multiple z-stacks, it will throw an error when trying to make a MAX projection. If you have single plane movies, you will need to comment out the functions that deal with max projection.
 
