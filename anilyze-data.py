@@ -26,7 +26,7 @@ def make_directories(scan):
     filteredMAX = os.path.join(MAX, "filteredMAX")
     rawMAX = os.path.join(MAX, "rawMAX")
     directories = [processed, raw, diff, filteredMAX, rawMAX] # a list of all the paths to the directories
-    
+
     if os.path.exists(processed):
         print "The directory", processed, "already exists! Overwriting..."
         shutil.rmtree(processed)
@@ -37,7 +37,7 @@ def make_directories(scan):
         for d in directories:
             os.makedirs(d)
             print d, "created"
-    
+
     print "Finished creating directories!"
     return directories
 
@@ -53,8 +53,16 @@ def make_hyperstack(scan, basename):
     print "Opening file"
     IJ.run("Bio-Formats Importer", "open=[" + firstFile[0] + "] color_mode=Default concatenate_series open_all_series rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT")
     print "File opened"
-    imp = IJ.getImage()
+    image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
+    for i in image_titles:
+        print i
+        imp = WindowManager.getImage(i)
+        if imp.getNFrames() == 1: #if it is a partial slice, will close it
+        	imp.close()
+	imp = IJ.getImage()
     imp.setTitle(basename + "_raw.tif")
+
+
 
 #Runs the channel splitter if it detects multiple channels.
 def split_channels(directories, channels):
@@ -82,8 +90,8 @@ def make_MAX(directories, x):
         if imp.getNSlices() == 1:
         	print "oops, cannot z-project"
         	IJ.run("Close All")
-        	raise Exception("Not a stack!")   
-        
+        	raise Exception("Not a stack!")
+
         IJ.run(imp, "Z Project...", "projection=[Max Intensity] all")
         imp = WindowManager.getImage("MAX_" + i)
         windowName = imp.getTitle()
@@ -92,7 +100,7 @@ def make_MAX(directories, x):
         imp.changes = False #Answers "no" to the dialog asking if you want to save any changes
         imp.close()
 
-#If there is more than one channel, runs merge_channels. Else skips this step 
+#If there is more than one channel, runs merge_channels. Else skips this step
 def merge_channels(basename, channels, directories, x):
     image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
     if channels >1:
@@ -172,7 +180,7 @@ def run_it():
     errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n") #writes the date and time
     errorFile.write("Here we go...don't fuck it up...\n")
     errorFile.close()
-            
+
     scanList = list_scans(experimentFolder) # gets a list of all the scan paths in experiment folder
     for scan in scanList:
     	try:
@@ -187,7 +195,7 @@ def run_it():
             make_MAX(directories, 4)
             print "Making rawMAX merge"
             merge_channels(basename, channels, directories, 4) #makes rawMAX merge (the 4 determines where it saves)
-            
+
             # processing stream to make filtered images. Comment out if you dont want to make any.
             print "Making filtered movies..."
             rawFiles = os.listdir(directories[1])
@@ -195,19 +203,20 @@ def run_it():
             make_MAX(directories, 3)
             merge_channels(basename, channels, directories, 3)
 
-            # Make difference movies. As it stands, it currently looks in directories[2] aka filteredMAX. 
+            # Make difference movies. As it stands, it currently looks in directories[2] aka filteredMAX.
             #If you commented out that stream or want them for the rawMAX, change the number to 4
-            if differenceNumber >0: 
+            if differenceNumber >0:
                 print "Making difference movies..."
                 make_difference(directories, 3, differenceNumber)
-            
+
             errorFile = open(errorFilePath, "a")
+            errorFile.write("Processing " + basename + "\n")
             errorFile.write("Congrats, you didn't fuck it up!\n")
             errorFile.close()
-        
+
         except:  #if there is an exception to the above code, create or append to an errorFile with the traceback
             print "Error with ", basename, "continuing on..."
- 
+
             errorFile = open(errorFilePath, "a")
             errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n") #writes the date and time
             errorFile.write("You fucked it up\n")
@@ -216,7 +225,7 @@ def run_it():
             errorFile.close()
             IJ.run("Close All")
             continue #continue on with the next scan, even if the current one threw an error
-            
+
     errorFile = open(errorFilePath, "a")
     errorFile.write("\nDone with script.\n")
     errorFile.close()
