@@ -138,7 +138,7 @@ def make_difference(directories, x, differenceNumber):
         dup.setTitle(windowName + "_dup")
 
         differenceNumberString = str(differenceNumber) #turns the integer input into a string (str)
-        imp = WindowManager.getImage(i)
+
         for n in range(1, differenceNumber+1):
             if n >= 1:
                 IJ.run(imp, "Delete Slice", "")
