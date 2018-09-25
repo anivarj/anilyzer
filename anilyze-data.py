@@ -54,15 +54,14 @@ def make_hyperstack(scan, basename):
     IJ.run("Bio-Formats Importer", "open=[" + firstFile[0] + "] color_mode=Default concatenate_series open_all_series rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT")
     print "File opened"
     image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
-    for i in image_titles:
-        print i
-        imp = WindowManager.getImage(i)
-        if imp.getNFrames() == 1: #if it is a partial slice, will close it
-        	imp.close()
+    if len(image_titles) > 1: #if there is more than one window open...
+        for i in image_titles: #for each item in the WindowManager, get the image and check nFrames
+            print i
+            imp = WindowManager.getImage(i)
+            if imp.getNFrames() == 1: #if it is a partial slice, will close it
+        	    imp.close()
 	imp = IJ.getImage()
     imp.setTitle(basename + "_raw.tif")
-
-
 
 #Runs the channel splitter if it detects multiple channels.
 def split_channels(directories, channels):
