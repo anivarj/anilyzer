@@ -13,7 +13,7 @@ COMMON ERRORS:
 
 Extra slices: If you have an extra partial slice from stopping the acquisition manually, this might throw an error at MAX projecting and/or produce extra files if it tries to run them through the stream.
 
-Stack problems: If the script finds a movie that does not have multiple z-stacks, it will throw an error when trying to make a MAX projection. If you have single plane movies, you will need to comment out the functions that deal with max projection.
+Stack problems: If the script finds a movie that does not have multiple z-stacks, it will try to skip MAX projection but it might throw an error. This script has not been tested with single plane movies.
 
 Hopefully this script will be helpful, and feel free to check out a branch and make your own edits/improvements!
 Let me know if there is anything you would like to see implemented.
