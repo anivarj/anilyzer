@@ -5,6 +5,7 @@ from ij import IJ, WindowManager, ImagePlus
 from ij.gui import GenericDialog
 from ij.plugin import ImageCalculator
 import datetime
+import Exception
 
 experimentFolder = str(experimentFolder) #changes the selected directory into a string for future use
 
@@ -59,10 +60,14 @@ def make_hyperstack(scan, basename):
         imp = WindowManager.getImage(i)
         if imp.getNFrames() == 1: #if it is a partial slice, will close it
         	imp.close()
-	imp = IJ.getImage()
+
+    try:
+        image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
+    except TypeError:
+        raise Exception("No windows open!") 
+        return
+    imp = IJ.getImage()
     imp.setTitle(basename + "_raw.tif")
-
-
 
 #Runs the channel splitter if it detects multiple channels.
 def split_channels(directories, channels):
@@ -225,7 +230,7 @@ def run_it():
             traceback.print_exc(file = errorFile)
             errorFile.close()
             IJ.run("Close All")
-            IJ.freeMemory() #runs garbage collector 
+            IJ.freeMemory() #runs garbage collector
             continue #continue on with the next scan, even if the current one threw an error
 
     errorFile = open(errorFilePath, "a")
