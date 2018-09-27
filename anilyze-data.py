@@ -5,7 +5,6 @@ from ij import IJ, WindowManager, ImagePlus
 from ij.gui import GenericDialog
 from ij.plugin import ImageCalculator
 import datetime
-import Exception
 
 experimentFolder = str(experimentFolder) #changes the selected directory into a string for future use
 
@@ -51,7 +50,7 @@ def make_hyperstack(scan, basename):
     firstFileName = basename + "_Cycle00001_Ch?_000001.ome.tif"
     firstFilePath = os.path.join(scan, firstFileName)
     firstFile = glob.glob(firstFilePath)
-    print "Opening file"
+    print "Opening file", firstFile[0]
     IJ.run("Bio-Formats Importer", "open=[" + firstFile[0] + "] color_mode=Default concatenate_series open_all_series rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT")
     print "File opened"
     image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
@@ -64,7 +63,7 @@ def make_hyperstack(scan, basename):
     try:
         image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
     except TypeError:
-        raise Exception("No windows open!") 
+        raise Exception("No windows open! Is this a single slice acquisition?")
         return
     imp = IJ.getImage()
     imp.setTitle(basename + "_raw.tif")
