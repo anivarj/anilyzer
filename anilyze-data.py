@@ -50,7 +50,7 @@ def make_hyperstack(scan, basename):
     firstFileName = basename + "_Cycle00001_Ch?_000001.ome.tif"
     firstFilePath = os.path.join(scan, firstFileName)
     firstFile = glob.glob(firstFilePath)
-    print "Opening file"
+    print "Opening file", firstFile[0]
     IJ.run("Bio-Formats Importer", "open=[" + firstFile[0] + "] color_mode=Default concatenate_series open_all_series rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT")
     print "File opened"
     image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
@@ -59,10 +59,14 @@ def make_hyperstack(scan, basename):
         imp = WindowManager.getImage(i)
         if imp.getNFrames() == 1: #if it is a partial slice, will close it
         	imp.close()
-	imp = IJ.getImage()
+
+    try:
+        image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
+    except TypeError:
+        raise Exception("No windows open! Is this a single slice acquisition?")
+        return
+    imp = IJ.getImage()
     imp.setTitle(basename + "_raw.tif")
-
-
 
 #Runs the channel splitter if it detects multiple channels.
 def split_channels(directories, channels):
@@ -225,7 +229,7 @@ def run_it():
             traceback.print_exc(file = errorFile)
             errorFile.close()
             IJ.run("Close All")
-            IJ.freeMemory() #runs garbage collector 
+            IJ.freeMemory() #runs garbage collector
             continue #continue on with the next scan, even if the current one threw an error
 
     errorFile = open(errorFilePath, "a")
