@@ -213,6 +213,7 @@ def run_it():
             errorFile.write("Processing " + basename + "\n")
             errorFile.write("Congrats, you didn't fuck it up!\n")
             errorFile.close()
+            IJ.freeMemory() #runs garbage collector
 
         except:  #if there is an exception to the above code, create or append to an errorFile with the traceback
             print "Error with ", basename, "continuing on..."
@@ -224,6 +225,7 @@ def run_it():
             traceback.print_exc(file = errorFile)
             errorFile.close()
             IJ.run("Close All")
+            IJ.freeMemory() #runs garbage collector 
             continue #continue on with the next scan, even if the current one threw an error
 
     errorFile = open(errorFilePath, "a")
