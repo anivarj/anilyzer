@@ -6,6 +6,7 @@ from ij.gui import GenericDialog
 from ij.plugin import ImageCalculator
 import datetime
 #Testing this change
+#Testing out this other change
 experimentFolder = str(experimentFolder) #changes the selected directory into a string for future use
 
 # Get a list of all scan folders inside the experimentFolder and save them as a list called scanList
