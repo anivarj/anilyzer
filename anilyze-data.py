@@ -1,10 +1,16 @@
 # @File(label = "Input directory", style = "directory") experimentFolder
 # @Integer(label = "Slices to remove for difference movie", value = 4) differenceNumber
+#@ String (visibility=MESSAGE, value="Please select your channel colors. If you have one channel, assign it to Channel 1.") msg
+#@ String(label="Channel 1",choices={"Select", "Red", "Green", "Blue"}, value = "Select", persist=false) ch1color
+#@ String(label="Channel 2",choices={"Select","Red", "Green", "Blue"}, value = "Select", persist=false) ch2color
+#@ String(label="Channel 3",choices={"Select","Red", "Green", "Blue"}, value = "Select", persist=false) ch3color
+
 import os, sys, traceback, shutil, glob
 from ij import IJ, WindowManager, ImagePlus
 from ij.gui import GenericDialog
 from ij.plugin import ImageCalculator
 import datetime
+import fnmatch
 
 experimentFolder = str(experimentFolder) #changes the selected directory into a string for future use
 
@@ -89,7 +95,7 @@ def make_hyperstack(scan, microscopeType):
 		initiatorFilePath = initiatorFilePath[0]
 		print "Opening file", initiatorFilePath
 
-	IJ.run("Bio-Formats Importer", "open=[" + initiatorFilePath + "] color_mode=Default concatenate_series open_all_series rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT")
+	IJ.run("Bio-Formats Importer", "open=[" + initiatorFilePath + "] color_mode=Grayscale concatenate_series open_all_series rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT")
 	print "File opened"
 	image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
 	for i in image_titles:
@@ -108,7 +114,7 @@ def make_hyperstack(scan, microscopeType):
 	return basename
 
 #Runs the channel splitter if it detects multiple channels.
-def split_channels(directories, channels):
+def split_channels(directories, channels, ):
 	imp = IJ.getImage()
 	if channels >1:
 		IJ.run("Split Channels")
@@ -142,6 +148,26 @@ def make_MAX(directories, x):
 		imp = WindowManager.getImage(i)
 		imp.changes = False #Answers "no" to the dialog asking if you want to save any changes
 		imp.close()
+
+def applyLut (ch1color, ch2color, ch3color):
+	image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
+	for i in image_titles:
+		print i
+		imp = WindowManager.getImage(i)
+		print "imp is ", imp
+
+		if fnmatch.fnmatch(i, "*C1*"):
+			IJ.run(imp, ch1color, "")
+			print "CH1 set"
+		if fnmatch.fnmatch(i, "*C2*"):
+			IJ.run(imp, ch2color, "")
+			print "CH2 set"
+		if fnmatch.fnmatch(i, "*C3*"):
+			IJ.run(imp, ch3color, "")
+			print "CH3 set"
+		else:
+			print "Done setting LUTs"
+
 
 #If there is more than one channel, runs merge_channels. Else skips this step
 def merge_channels(basename, channels, directories, x):
@@ -243,6 +269,7 @@ def run_it():
 			print "The number of channels is", channels
 			split_channels(directories, channels)
 			make_MAX(directories, 4)
+			applyLut(ch1color, ch2color, ch3color)
 			print "Making rawMAX merge"
 			merge_channels(basename, channels, directories, 4) #makes rawMAX merge (the 4 determines where it saves)
 
