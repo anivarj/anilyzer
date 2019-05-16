@@ -68,19 +68,23 @@ def make_directories(scan):
 
 #Uses Bio-formats importer to import a hyperstack from an xml file. The xml file must have the same name as the scan
 # Gets basename of the scan from run_it() function
-def make_hyperstack(scan, basename, microscopeType):
+def make_hyperstack(scan, microscopeType):
+	basename = os.path.basename(scan)
 	if microscopeType == "Olympus":
 		initiatorFileName = os.path.splitext(basename) [0]
-		truebasename = os.path.splitext(initiatorFileName) [0]
+		basename = os.path.splitext(initiatorFileName) [0]
+		print "basename is ", basename
 		print ".oif file is ",  initiatorFileName
 		initiatorFilePath = os.path.join(experimentFolder, initiatorFileName)
-		print ".oif file path is ", initiatorFilePath
+		print "Opening file ", initiatorFilePath
 
 	elif microscopeType == "Bruker":
 		#xmlFile = basename + ".xml"
 		#xmlFile = os.path.join(scan, xmlFile) #makes path to the xml file
+		print "basename is ", basename
 		initiatorFileName = basename + "_Cycle00001_Ch?_000001.ome.tif"
 		initiatorFilePath = os.path.join(scan, initiatorFileName)
+		print "initiatorFilePath ", initiatorFilePath
 		initiatorFilePath = glob.glob(initiatorFilePath)
 		initiatorFilePath = initiatorFilePath[0]
 		print "Opening file", initiatorFilePath
@@ -101,6 +105,7 @@ def make_hyperstack(scan, basename, microscopeType):
 		return
 	imp = IJ.getImage()
 	imp.setTitle(basename + "_raw.tif")
+	return basename
 
 #Runs the channel splitter if it detects multiple channels.
 def split_channels(directories, channels):
@@ -229,10 +234,10 @@ def run_it():
 
 	for scan in scanList:
 		try:
-			basename = os.path.basename(scan)
 			print "Checking for output directories in ", scan
 			directories = make_directories(scan)
-			make_hyperstack(scan, basename, microscopeType)
+			basename = make_hyperstack(scan, microscopeType)
+			print "The returned basename is ", basename
 			imp = IJ.getImage()
 			channels = imp.getNChannels() #gets the number of channels
 			print "The number of channels is", channels
