@@ -5,6 +5,20 @@
 #@ String(label="Channel 2",choices={"Select","Red", "Green", "Blue"}, value = "Select", persist=false) ch2color
 #@ String(label="Channel 3",choices={"Select","Red", "Green", "Blue"}, value = "Select", persist=false) ch3color
 
+"""
+##AUTHOR: Ani Michaud (Varjabedian)
+
+## DESCRIPTION: This script is for automating common Fiji processing commands for imaging datasets. The user inputs a directory where their imaging data is stored, and also information about channel color assignments. If the user is not interested in making difference movies, they can set the integer to "0" or comment out that function call in the main function run_it().
+
+The script first checks the file structure of the input directory, as different microscopes store information in different ways, and then it assigns a value to microscopeType. This value allows the correct files to be parsed and the output directories to be placed in the correct location.
+
+The script makes a list of all the scan directories, and for each scan, it assembles a hyperstack, splits channels, makes MAX projections and also does some filtering (but saves the raw data as well). It merges multi-channel images using the colors you specify in the beginning. At the end, it makes difference movies, which are useful for enhancing moving signals and eliminating static ones. Everything is saved along the way, so feel free to comment out bits that you don't have use for.
+
+For more information and up-to-date changes, visit the GitHub repository: https://github.com/anivarj/anilyzer
+
+"""
+
+#importing modules and other shit
 import os, sys, traceback, shutil, glob
 from ij import IJ, WindowManager, ImagePlus
 from ij.gui import GenericDialog
@@ -12,31 +26,34 @@ from ij.plugin import ImageCalculator
 import datetime
 import fnmatch
 
-experimentFolder = str(experimentFolder) #changes the selected directory into a string for future use
+experimentFolder = str(experimentFolder)
 
-# Get a list of all scan folders inside the experimentFolder and save them as a list called scanList
-
+# Assesses the file structure of experimentFolder and assigns a "microscope type" which gets passed to other functions. This helps with determining where certain files and directories should be located.
 def microscope_check(experimentFolder):
+	#If it finds .oif files inside the main folder, it calls the microscope "Olympus"
 	if any(File.endswith(".oif") for File in os.listdir(experimentFolder)):
 		print(".oif files present, running Olympus pipeline")
 		microscopeType = "Olympus"
 		return microscopeType
 	else:
+		#If there are no .oif files in the main folder, it calls the microscope "Bruker"
 		print("No .oif files present, running Bruker pipeline")
 		microscopeType = "Bruker"
 		return microscopeType
 
+# Get a list of all scan folders inside the experimentFolder and save them as a list called scanList
 def list_scans(experimentFolder, microscopeType):
 	scanList = []
+	# This bit is to screen out text files and other things that might be in the main folder, and only make a list of the scan directories
 	if microscopeType == "Bruker":
 		for File in os.listdir(experimentFolder):
 			dirpath = os.path.join(experimentFolder, File)
-			if os.path.isdir(dirpath): #if the name is a directory, get the full path to it and add to scanList
+			if os.path.isdir(dirpath):
 				print "dirpath is " + dirpath
 				scanList.append(dirpath)
 		return scanList
 
-
+	# If the microscope is "Olympus" type, the directories end in .oif.files
 	if microscopeType == "Olympus":
 		oifList = []
 		for File in os.listdir(experimentFolder):
@@ -72,8 +89,7 @@ def make_directories(scan):
 	print "Finished creating directories!"
 	return directories
 
-#Uses Bio-formats importer to import a hyperstack from an xml file. The xml file must have the same name as the scan
-# Gets basename of the scan from run_it() function
+#Uses Bio-formats importer to import a hyperstack 
 def make_hyperstack(scan, microscopeType):
 	basename = os.path.basename(scan)
 	if microscopeType == "Olympus":
