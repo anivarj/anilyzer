@@ -66,15 +66,15 @@ def list_scans(experimentFolder, microscopeType):
 
 # check to see if directories already exist. If not, make them. Needs to be passed the full path to the scan
 def make_directories(scan):
-	# defining all the paths to the output folders
 	processed = os.path.join(scan, "processed") #this is where your processed data will go
 	raw = os.path.join(processed, "raw")
 	diff = os.path.join(processed, "diff")
 	MAX = os.path.join(processed, "MAX")
 	filteredMAX = os.path.join(MAX, "filteredMAX")
 	rawMAX = os.path.join(MAX, "rawMAX")
-	directories = [processed, raw, diff, filteredMAX, rawMAX] # a list of all the paths to the directories
+	directories = [processed, raw, diff, filteredMAX, rawMAX]
 
+	#If a processed folder exists, it will erase and remake fresh folders
 	if os.path.exists(processed):
 		print "The directory", processed, "already exists! Overwriting..."
 		shutil.rmtree(processed)
@@ -89,14 +89,17 @@ def make_directories(scan):
 	print "Finished creating directories!"
 	return directories
 
-#Uses Bio-formats importer to import a hyperstack 
+#Uses Bio-formats importer to import a hyperstack
 def make_hyperstack(scan, microscopeType):
+	#gets the basename of the full path. Will be different for microscopeType
 	basename = os.path.basename(scan)
+
+	# Defines an "initator file" to give bioformats importer, and also modified basename (without .oif.files extension) for naming windows
 	if microscopeType == "Olympus":
-		initiatorFileName = os.path.splitext(basename) [0]
-		basename = os.path.splitext(initiatorFileName) [0]
+		initiatorFileName = os.path.splitext(basename) [0] #removes .file ext
+		basename = os.path.splitext(initiatorFileName) [0] #removes .oif ext
 		print "basename is ", basename
-		print ".oif file is ",  initiatorFileName
+		print ".oif file is ",  initiatorFileName #this is the file to pass to bioformats
 		initiatorFilePath = os.path.join(experimentFolder, initiatorFileName)
 		print "Opening file ", initiatorFilePath
 
