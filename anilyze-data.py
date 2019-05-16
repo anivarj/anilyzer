@@ -71,7 +71,7 @@ def make_directories(scan):
 def make_hyperstack(scan, basename, microscopeType):
 	if microscopeType == "Olympus":
 		initiatorFileName = os.path.splitext(basename) [0]
-		basename = os.path.splitext(initiatorFileName) [0]
+		truebasename = os.path.splitext(initiatorFileName) [0]
 		print ".oif file is ",  initiatorFileName
 		initiatorFilePath = os.path.join(experimentFolder, initiatorFileName)
 		print ".oif file path is ", initiatorFilePath
@@ -81,9 +81,9 @@ def make_hyperstack(scan, basename, microscopeType):
 		#xmlFile = os.path.join(scan, xmlFile) #makes path to the xml file
 		initiatorFileName = basename + "_Cycle00001_Ch?_000001.ome.tif"
 		initiatorFilePath = os.path.join(scan, initiatorFileName)
-		initiatorFile = glob.glob(initiatorFilePath)
-		initiatorFile = initiatorFile[0]
-		print "Opening file", initiatorFile
+		initiatorFilePath = glob.glob(initiatorFilePath)
+		initiatorFilePath = initiatorFilePath[0]
+		print "Opening file", initiatorFilePath
 
 	IJ.run("Bio-Formats Importer", "open=[" + initiatorFilePath + "] color_mode=Default concatenate_series open_all_series rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT")
 	print "File opened"
