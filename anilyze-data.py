@@ -66,6 +66,7 @@ def list_scans(experimentFolder, microscopeType):
 
 # check to see if directories already exist. If not, make them. Needs to be passed the full path to the scan
 def make_directories(scan):
+	print "Checking for output directories in ", scan
 	processed = os.path.join(scan, "processed") #this is where your processed data will go
 	raw = os.path.join(processed, "raw")
 	diff = os.path.join(processed, "diff")
@@ -168,24 +169,35 @@ def make_MAX(directories, x):
 		imp.changes = False #Answers "no" to the dialog asking if you want to save any changes
 		imp.close()
 
-def applyLut (ch1color, ch2color, ch3color):
+def applyLut (channels, ch1color, ch2color, ch3color):
 	image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
-	for i in image_titles:
-		print i
-		imp = WindowManager.getImage(i)
-		print "imp is ", imp
+	print "Setting CH1 color for ", image_titles[0]
+	windowname = image_titles[0]
+	imp = WindowManager.getImage(windowname)
+	IJ.run(imp, ch1color, "")
+	print "CH1 LUT set for ", image_titles[0]
 
-		if fnmatch.fnmatch(i, "*C1*"):
-			IJ.run(imp, ch1color, "")
-			print "CH1 set"
-		if fnmatch.fnmatch(i, "*C2*"):
-			IJ.run(imp, ch2color, "")
-			print "CH2 set"
-		if fnmatch.fnmatch(i, "*C3*"):
-			IJ.run(imp, ch3color, "")
-			print "CH3 set"
-		else:
-			print "Done setting LUTs"
+	if channels ==2:
+		windowname2 = image_titles[1]
+		imp2 = WindowManager.getImage(windowname2)
+		IJ.run(imp2, ch2color, "")
+		print "CH2 LUT set for ", image_titles[1]
+
+	elif channels == 3:
+		windowname2 = image_titles[1]
+		imp2 = WindowManager.getImage(windowname2)
+		IJ.run(imp2, ch2color, "")
+		print "CH2 LUT set for ", image_titles[1]
+
+		windowname3 = image_titles[2]
+		imp3 = WindowManager.getImage(windowname3)
+		IJ.run(imp3, ch3color, "")
+		print "CH3 LUT set for ", image_titles[2]
+
+	else:
+		print "something went wrong with LUT assignment..."
+
+print "Done setting LUTs"
 
 
 #If there is more than one channel, runs merge_channels. Else skips this step
@@ -194,9 +206,9 @@ def merge_channels(basename, channels, directories, x):
 	if channels >1:
 		print "Found", channels, "channels...merging them together...."
 		if channels == 2:
-			IJ.run("Merge Channels...", "c1=[" + image_titles[0] + "] c2=[" + image_titles[1] + "] create keep")
+			IJ.run("Merge Channels...", "c1=[" + image_titles[0] + "] c2=[" + image_titles[1] + "] create")
 		if channels == 3:
-			IJ.run("Merge Channels...", "c1=[" + image_titles[0] + "] c2=[" + image_titles[1] + "] c3=[" + image_titles[2] + "] create keep")
+			IJ.run("Merge Channels...", "c1=[" + image_titles[0] + "] c2=[" + image_titles[1] + "] c3=[" + image_titles[2] + "] create")
 		imp = WindowManager.getImage("Merged")
 		imp.setTitle("Merged_" + basename)
 		windowName = imp.getTitle()
@@ -262,33 +274,36 @@ def make_difference(directories, x, differenceNumber):
 
 # the main function that calls all the other functions
 def run_it():
-	errorFilePath = os.path.join(experimentFolder, "errorFile.txt") #makes an error log file path
-	now = datetime.datetime.now() # gets the current date and time
+	# make an error log file that can be written to
+	errorFilePath = os.path.join(experimentFolder, "errorFile.txt")
+	now = datetime.datetime.now()
 	errorFile = open(errorFilePath, "w")
-	errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n") #writes the date and time
+	errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n")
 	errorFile.write("Here we go...don't fuck it up...\n")
 	errorFile.close()
 
+	#Runs microscope_check and defines the scanList accordingly
 	microscopeType = microscope_check(experimentFolder)
+
 	if microscopeType == "Olympus":
 		scanList = list_scans(experimentFolder, microscopeType)
-		print "The returned scanList is "
-		print scanList
+		print "The returned scanList is", len(scanList), "item(s) long"
+
 	elif microscopeType == "Bruker":
-		scanList = list_scans(experimentFolder, microscopeType) # gets a list of all the scan paths in experiment folder
+		scanList = list_scans(experimentFolder, microscopeType)
+		print "The returned scanList is", len(scanList), "item(s) long"
 
 	for scan in scanList:
 		try:
-			print "Checking for output directories in ", scan
 			directories = make_directories(scan)
 			basename = make_hyperstack(scan, microscopeType)
-			print "The returned basename is ", basename
+			#print "The returned basename is ", basename
 			imp = IJ.getImage()
 			channels = imp.getNChannels() #gets the number of channels
 			print "The number of channels is", channels
 			split_channels(directories, channels)
 			make_MAX(directories, 4)
-			applyLut(ch1color, ch2color, ch3color)
+			applyLut(channels, ch1color, ch2color, ch3color)
 			print "Making rawMAX merge"
 			merge_channels(basename, channels, directories, 4) #makes rawMAX merge (the 4 determines where it saves)
 
@@ -297,6 +312,7 @@ def run_it():
 			rawFiles = os.listdir(directories[1])
 			median_filter(rawFiles, directories)
 			make_MAX(directories, 3)
+			applyLut(channels, ch1color, ch2color, ch3color)
 			merge_channels(basename, channels, directories, 3)
 
 			# Make difference movies. As it stands, it currently looks in directories[2] aka filteredMAX.
