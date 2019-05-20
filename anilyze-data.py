@@ -17,7 +17,7 @@ The script makes a list of all the scan directories, and for each scan, it assem
 For more information and up-to-date changes, visit the GitHub repository: https://github.com/anivarj/anilyzer
 
 """
-#TESTING IF THIS SHOWS UP IN SLACK
+#TESTING IF THIS SHOWS UP IN SLACK##
 
 #importing modules and other shit
 import os, sys, traceback, shutil, glob
