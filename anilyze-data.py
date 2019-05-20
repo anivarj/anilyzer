@@ -91,10 +91,9 @@ def make_directories(scan):
 	print "Finished creating directories!"
 	return directories
 
+
 #Uses Bio-formats importer to import a hyperstack
-def make_hyperstack(scan, microscopeType):
-	#gets the basename of the full path. Will be different for microscopeType
-	basename = os.path.basename(scan)
+def make_hyperstack(basename, scan, microscopeType):
 
 	# Defines an "initator file" to give bioformats importer, and also modified basename (without .oif.files extension) for naming windows
 	if microscopeType == "Olympus":
@@ -297,7 +296,8 @@ def run_it():
 	for scan in scanList:
 		try:
 			directories = make_directories(scan)
-			basename = make_hyperstack(scan, microscopeType)
+			basename = os.path.basename(scan)
+			make_hyperstack(basename, scan, microscopeType)
 			#print "The returned basename is ", basename
 			imp = IJ.getImage()
 			channels = imp.getNChannels() #gets the number of channels
