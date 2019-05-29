@@ -1,9 +1,9 @@
 # @File(label = "Input directory", style = "directory") experimentFolder
 # @Integer(label = "Slices to remove for difference movie", value = 4) differenceNumber
 #@ String (visibility=MESSAGE, value="Please select your channel colors. If you have one channel, assign it to Channel 1.") msg
-#@ String(label="Channel 1",choices={"Select", "Red", "Green", "Blue"}, value = "Select", persist=false) ch1color
-#@ String(label="Channel 2",choices={"Select","Red", "Green", "Blue"}, value = "Select", persist=false) ch2color
-#@ String(label="Channel 3",choices={"Select","Red", "Green", "Blue"}, value = "Select", persist=false) ch3color
+#@ String(label="Channel 1",choices={"Select", "Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch1color
+#@ String(label="Channel 2",choices={"Select","Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch2color
+#@ String(label="Channel 3",choices={"Select","Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch3color
 
 """
 ##AUTHOR: Ani Michaud (Varjabedian)
@@ -118,12 +118,14 @@ def make_hyperstack(basename, scan, microscopeType):
 	IJ.run("Bio-Formats Importer", "open=[" + initiatorFilePath + "] color_mode=Grayscale concatenate_series open_all_series rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT")
 	print "File opened"
 	image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
-	for i in image_titles:
-		print i
-		imp = WindowManager.getImage(i)
-		if imp.getNFrames() == 1: #if it is a partial slice, will close it
-			imp.close()
 
+#Checks to see if multiple windows are open. If they are, it will close windows with a single frame (as a way of dealing with partial slices).
+	if len(image_titles) > 1:
+		for i in image_titles:
+			print i
+			imp = WindowManager.getImage(i)
+			if imp.getNFrames() == 1: #if it is a partial slice, will close it
+				imp.close()
 	try:
 		image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
 	except TypeError:
@@ -157,9 +159,9 @@ def make_MAX(directories, x):
 	for i in image_titles:
 		imp = WindowManager.getImage(i)
 		if imp.getNSlices() == 1:
-			print "oops, cannot z-project"
+			print "Cannot z-project, is this a single plane acquisition?"
 			IJ.run("Close All")
-			raise Exception("Not a stack!")
+			raise Exception("Cannot z-project, is this a single plane acquisition?")
 
 		IJ.run(imp, "Z Project...", "projection=[Max Intensity] all")
 		imp = WindowManager.getImage("MAX_" + i)
@@ -209,7 +211,7 @@ def merge_channels(basename, channels, directories, x):
 			IJ.run("Merge Channels...", "c1=[" + image_titles[0] + "] c2=[" + image_titles[1] + "] create")
 		if channels == 3:
 			IJ.run("Merge Channels...", "c1=[" + image_titles[0] + "] c2=[" + image_titles[1] + "] c3=[" + image_titles[2] + "] create")
-		imp = WindowManager.getImage("Merged")
+		imp = IJ.getImage()
 		imp.setTitle("Merged_" + basename)
 		windowName = imp.getTitle()
 		IJ.saveAsTiff(imp, os.path.join(directories[x], windowName)) #saves to rawMAX. Passed directory from run_it()
@@ -237,13 +239,20 @@ def make_difference(directories, x, differenceNumber):
 		if "MAX" in file:
 			IJ.open(os.path.join(directories[x], file))
 	image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
+
 	for i in image_titles:
 		imp = WindowManager.getImage(i)
 		windowName = imp.getTitle()
-		imp.setT(1)
-		dup = imp.duplicate()
-		dup.show()
-		dup.setTitle(windowName + "_dup")
+		if imp.getNFrames() == 1: #if it is a partial slice, will close it
+			imp.close()
+			raise Exception("Single timepoint data. Cannot create difference movies.")
+			return
+		else:
+			imp.setT(1)
+			dup = imp.duplicate()
+			dup.show()
+			dup.setTitle(windowName + "_dup")
+
 
 		differenceNumberString = str(differenceNumber) #turns the integer input into a string (str)
 
