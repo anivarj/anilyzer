@@ -4,6 +4,7 @@
 #@ String(label="Channel 1",choices={"Select", "Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch1color
 #@ String(label="Channel 2",choices={"Select","Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch2color
 #@ String(label="Channel 3",choices={"Select","Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch3color
+#@Boolean(label = "Single z-plane data?") singleplane
 
 """
 ##AUTHOR: Ani Michaud (Varjabedian)
@@ -135,8 +136,22 @@ def make_hyperstack(basename, scan, microscopeType):
 	imp.setTitle(basename + "_raw.tif")
 	return basename
 
+#checks for single plane acquisition. Don't need since you ask up front
+#def single_plane_check():
+	print "Checking for z-planes..."
+	imp = IJ.getImage()
+	if imp.getNSlices() > 1:
+		print "The number of z-planes is ", imp.getNSlices()
+		singleplane = False
+
+	elif imp.getNSlices() == 1:
+		print "The number of z-planes is ", imp.getNSlices()
+		singleplane = True
+
+	return singleplane
+
 #Runs the channel splitter if it detects multiple channels.
-def split_channels(directories, channels, ):
+def split_channels(directories, channels):
 	imp = IJ.getImage()
 	if channels >1:
 		IJ.run("Split Channels")
@@ -153,23 +168,24 @@ def split_channels(directories, channels, ):
 		windowName = imp.getTitle()
 		IJ.saveAsTiff(imp, os.path.join(directories[1], windowName))
 
+
 # If there are more than one z-slice, runs the max projector function. Else, returns and error and quits the program
-def make_MAX(directories, x):
+def make_MAX(directories, x, singleplane):
 	image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
+
 	for i in image_titles:
 		imp = WindowManager.getImage(i)
-		if imp.getNSlices() == 1:
-			print "Cannot z-project, is this a single plane acquisition?"
-			IJ.run("Close All")
-			raise Exception("Cannot z-project, is this a single plane acquisition?")
-
-		IJ.run(imp, "Z Project...", "projection=[Max Intensity] all")
-		imp = WindowManager.getImage("MAX_" + i)
-		windowName = imp.getTitle()
-		IJ.saveAsTiff(imp, os.path.join(directories[x], windowName)) #saves to rawMAX directory. Passed the directory from run_it()
-		imp = WindowManager.getImage(i)
-		imp.changes = False #Answers "no" to the dialog asking if you want to save any changes
-		imp.close()
+		if singleplane == False:
+			IJ.run(imp, "Z Project...", "projection=[Max Intensity] all")
+			imp = WindowManager.getImage("MAX_" + i)
+			windowName = imp.getTitle()
+			IJ.saveAsTiff(imp, os.path.join(directories[x], windowName)) #saves to rawMAX directory. Passed the directory from run_it()
+			imp = WindowManager.getImage(i)
+			imp.changes = False #Answers "no" to the dialog asking if you want to save any changes
+			imp.close()
+		elif singleplane == True:
+			windowName = imp.getTitle()
+			print "Single plane data detected. Skipping Z-projection for ", windowName
 
 def applyLut (channels, ch1color, ch2color, ch3color):
 	image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
@@ -199,11 +215,10 @@ def applyLut (channels, ch1color, ch2color, ch3color):
 	else:
 		print "something went wrong with LUT assignment..."
 
-print "Done setting LUTs"
-
+	print "Done setting LUTs"
 
 #If there is more than one channel, runs merge_channels. Else skips this step
-def merge_channels(basename, channels, directories, x):
+def merge_channels(basename, channels, directories, x, suffix):
 	image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
 	if channels >1:
 		print "Found", channels, "channels...merging them together...."
@@ -212,7 +227,7 @@ def merge_channels(basename, channels, directories, x):
 		if channels == 3:
 			IJ.run("Merge Channels...", "c1=[" + image_titles[0] + "] c2=[" + image_titles[1] + "] c3=[" + image_titles[2] + "] create")
 		imp = IJ.getImage()
-		imp.setTitle("Merged_" + basename)
+		imp.setTitle("Merged_" + basename + suffix)
 		windowName = imp.getTitle()
 		IJ.saveAsTiff(imp, os.path.join(directories[x], windowName)) #saves to rawMAX. Passed directory from run_it()
 		IJ.run("Close All")
@@ -222,23 +237,33 @@ def merge_channels(basename, channels, directories, x):
 	print "Closing all files..."
 
 # Opens up the raw hyperstacks and runs a median filter
-def median_filter(rawFiles, directories):
+def median_filter(rawFiles, directories, x):
 	for f in rawFiles:
-		IJ.open(os.path.join(directories[1], f)) #this opens anything in the raw directory. If there are random files, this might cause problems
+		if fnmatch.fnmatch(f, "C?*"):
+			IJ.open(os.path.join(directories[1], f))
+
 	image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
 	for i in image_titles:
 		imp = WindowManager.getImage(i)
 		IJ.run(imp, "Median...", "radius =1 stack")
 		windowName = WindowManager.getImage(i).getTitle().replace("raw", "filtered") #save as _filtered.tif extension
 		imp.setTitle(windowName)
+		IJ.saveAsTiff(imp, os.path.join(directories[x], windowName)) #saves to raw directory. Passed the directory from run_it()
+
 
 # Based on the number you put in in the beginning dialogue box, it will remove slices to make a difference movie
 # This function looks in filteredMAX to make the movies, but you can always point it to the rawMAX if you prever
-def make_difference(directories, x, differenceNumber):
-	for file in os.listdir(directories[x]): #opens up the MAX files in filteredMAX
-		if "MAX" in file:
-			IJ.open(os.path.join(directories[x], file))
+def make_difference(directories, x, differenceNumber, singleplane):
+	for file in os.listdir(directories[x]):
+		if singleplane ==True:
+			if fnmatch.fnmatch(file, "MAX*"):
+				IJ.open(os.path.join(directories[x], file))
+		elif singleplane == False:
+			if fnmatch.fnmatch(file, "*_filtered"):
+				IJ.open(os.path.join(directories[1], file))
+
 	image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
+		
 
 	for i in image_titles:
 		imp = WindowManager.getImage(i)
@@ -311,25 +336,40 @@ def run_it():
 			imp = IJ.getImage()
 			channels = imp.getNChannels() #gets the number of channels
 			print "The number of channels is", channels
+			#singleplane = single_plane_check()
+			print "The returned value of singleplane is ", singleplane
 			split_channels(directories, channels)
-			make_MAX(directories, 4)
+			make_MAX(directories, 4, singleplane)
 			applyLut(channels, ch1color, ch2color, ch3color)
-			print "Making rawMAX merge"
-			merge_channels(basename, channels, directories, 4) #makes rawMAX merge (the 4 determines where it saves)
+			print "Making raw merge..."
+			if singleplane == False:
+				merge_channels(basename, channels, directories, 4, "_raw") #makes rawMAX merge (the 4 determines where it saves)
+			elif singleplane == True:
+				merge_channels(basename, channels, directories, 1, "_raw") #for single z-plane, saves in raw
 
 			# processing stream to make filtered images. Comment out if you dont want to make any.
 			print "Making filtered movies..."
 			rawFiles = os.listdir(directories[1])
-			median_filter(rawFiles, directories)
-			make_MAX(directories, 3)
+			median_filter(rawFiles, directories, 1)
+			print "making filtered max"
+			make_MAX(directories, 3, singleplane)
 			applyLut(channels, ch1color, ch2color, ch3color)
-			merge_channels(basename, channels, directories, 3)
+			print "Making filtered merge..."
+
+			if singleplane == False:
+				merge_channels(basename, channels, directories, 3, "_filtered")
+			elif singleplane == True:
+				merge_channels(basename, channels, directories, 1, "_filtered")
+
 
 			# Make difference movies. As it stands, it currently looks in directories[2] aka filteredMAX.
 			#If you commented out that stream or want them for the rawMAX, change the number to 4
 			if differenceNumber >0:
 				print "Making difference movies..."
-				make_difference(directories, 3, differenceNumber)
+				if singleplane == False:
+					make_difference(directories, 3, differenceNumber, singleplane)
+				elif singleplane == True:
+					make_difference(directories, 1, differenceNumber, singleplane)
 
 			errorFile = open(errorFilePath, "a")
 			errorFile.write("Processing " + basename + "\n")
