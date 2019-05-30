@@ -75,7 +75,8 @@ def make_directories(scan):
 	MAX = os.path.join(processed, "MAX")
 	filteredMAX = os.path.join(MAX, "filteredMAX")
 	rawMAX = os.path.join(MAX, "rawMAX")
-	directories = [processed, raw, diff, filteredMAX, rawMAX]
+	temp = os.path.join(processed, "temp")
+	directories = [processed, raw, diff, filteredMAX, rawMAX, temp]
 
 	#If a processed folder exists, it will erase and remake fresh folders
 	if os.path.exists(processed):
@@ -179,10 +180,11 @@ def make_MAX(directories, x, singleplane):
 			IJ.run(imp, "Z Project...", "projection=[Max Intensity] all")
 			imp = WindowManager.getImage("MAX_" + i)
 			windowName = imp.getTitle()
-			IJ.saveAsTiff(imp, os.path.join(directories[x], windowName)) #saves to rawMAX directory. Passed the directory from run_it()
+			IJ.saveAsTiff(imp, os.path.join(directories[x], windowName)) #saves to appropriate MAX directory. Passed the directory from run_it()
 			imp = WindowManager.getImage(i)
 			imp.changes = False #Answers "no" to the dialog asking if you want to save any changes
 			imp.close()
+			#if the data is single plane, it skipes projection and moves to LUT setting
 		elif singleplane == True:
 			windowName = imp.getTitle()
 			print "Single plane data detected. Skipping Z-projection for ", windowName
@@ -229,7 +231,7 @@ def merge_channels(basename, channels, directories, x, suffix):
 		imp = IJ.getImage()
 		imp.setTitle("Merged_" + basename + suffix)
 		windowName = imp.getTitle()
-		IJ.saveAsTiff(imp, os.path.join(directories[x], windowName)) #saves to rawMAX. Passed directory from run_it()
+		IJ.saveAsTiff(imp, os.path.join(directories[x], windowName)) #saves to output location x. Passed from run_it() function
 		IJ.run("Close All")
 	else:
 		print "Only 1 channel, skipping merge..."
@@ -248,22 +250,21 @@ def median_filter(rawFiles, directories, x):
 		IJ.run(imp, "Median...", "radius =1 stack")
 		windowName = WindowManager.getImage(i).getTitle().replace("raw", "filtered") #save as _filtered.tif extension
 		imp.setTitle(windowName)
-		IJ.saveAsTiff(imp, os.path.join(directories[x], windowName)) #saves to raw directory. Passed the directory from run_it()
+		IJ.saveAsTiff(imp, os.path.join(directories[x], windowName)) #saves to temp directory. Passed the directory from run_it()
 
 
 # Based on the number you put in in the beginning dialogue box, it will remove slices to make a difference movie
 # This function looks in filteredMAX to make the movies, but you can always point it to the rawMAX if you prever
 def make_difference(directories, x, differenceNumber, singleplane):
 	for file in os.listdir(directories[x]):
-		if singleplane ==True:
+		if singleplane == False:
 			if fnmatch.fnmatch(file, "MAX*"):
 				IJ.open(os.path.join(directories[x], file))
-		elif singleplane == False:
-			if fnmatch.fnmatch(file, "*_filtered"):
-				IJ.open(os.path.join(directories[1], file))
+		elif singleplane == True:
+			if fnmatch.fnmatch(file, "C?*"):
+				IJ.open(os.path.join(directories[x], file))
 
 	image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
-		
 
 	for i in image_titles:
 		imp = WindowManager.getImage(i)
@@ -298,6 +299,7 @@ def make_difference(directories, x, differenceNumber, singleplane):
 		impDiff = WindowManager.getImage("Result of "+ windowName)
 		windowName = impDiff.getTitle().replace("Result of ", "Diff" + differenceNumberString + "-")
 		impDiff.setTitle(windowName)
+
 		IJ.saveAsTiff(impDiff, os.path.join(directories[2], windowName)) #saves in diff folder
 		impDiff.changes = False #Answers "no" to the dialog asking if you want to save any changes
 		imp.changes = False #Answers "no" to the dialog asking if you want to save any changes
@@ -349,27 +351,28 @@ def run_it():
 
 			# processing stream to make filtered images. Comment out if you dont want to make any.
 			print "Making filtered movies..."
-			rawFiles = os.listdir(directories[1])
-			median_filter(rawFiles, directories, 1)
+			rawFiles = os.listdir(directories[1]) #makes a list of the riles in "raw"
+			median_filter(rawFiles, directories, 5) #saves output in temp
+
 			print "making filtered max"
 			make_MAX(directories, 3, singleplane)
 			applyLut(channels, ch1color, ch2color, ch3color)
-			print "Making filtered merge..."
 
+			print "Making filtered merge..."
+			# If single plane data, merges and saves in temp folder
 			if singleplane == False:
 				merge_channels(basename, channels, directories, 3, "_filtered")
 			elif singleplane == True:
-				merge_channels(basename, channels, directories, 1, "_filtered")
+				merge_channels(basename, channels, directories, 5, "_filtered")
 
 
-			# Make difference movies. As it stands, it currently looks in directories[2] aka filteredMAX.
-			#If you commented out that stream or want them for the rawMAX, change the number to 4
+			# Make difference movies. If single plane, uses temp directory for seed
 			if differenceNumber >0:
 				print "Making difference movies..."
 				if singleplane == False:
 					make_difference(directories, 3, differenceNumber, singleplane)
 				elif singleplane == True:
-					make_difference(directories, 1, differenceNumber, singleplane)
+					make_difference(directories, 5, differenceNumber, singleplane)
 
 			errorFile = open(errorFilePath, "a")
 			errorFile.write("Processing " + basename + "\n")
