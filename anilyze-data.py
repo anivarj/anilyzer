@@ -81,8 +81,8 @@ def make_directories(scan):
 	MAX = os.path.join(processed, "MAX") # makes full path to MAX folder, inside processed
 	filteredMAX = os.path.join(MAX, "filteredMAX") # makes full path to filteredMAX, inside MAX
 	rawMAX = os.path.join(MAX, "rawMAX") # makes full path to rawMAX, inside MAX
-	temp = os.path.join(processed, "temp") # makes full path to temp, inside processed
-	directories = [processed, raw, diff, filteredMAX, rawMAX, temp] # a list of all the full paths you just made
+	filtered = os.path.join(processed, "filtered") # makes full path to filtered, inside processed
+	directories = [processed, raw, diff, filteredMAX, rawMAX, filtered] # a list of all the full paths you just made
 
 	#If a processed folder exists, it will erase and remake fresh folders
 	if os.path.exists(processed):
@@ -261,11 +261,11 @@ def median_filter(rawFiles, directories, x): # all arguments are passed from run
 		IJ.run(imp, "Median...", "radius =1 stack")
 		windowName = WindowManager.getImage(i).getTitle().replace("raw", "filtered") # save as "*_filtered.tif" extension
 		imp.setTitle(windowName)
-		IJ.saveAsTiff(imp, os.path.join(directories[x], windowName)) # saves to temp directory. Passed the directory from run_it()
+		IJ.saveAsTiff(imp, os.path.join(directories[x], windowName)) # saves to filtered directory. Passed the directory from run_it()
 
 
 # For make_difference, it will remove slices to make a difference movie, based on the number you put in the beginning dialogue box.
-# This function looks in either filteredMAX or temp, depending on if the data is single plane. You can change what data you want to us in run_it by altering x
+# This function looks in either filteredMAX or filtered, depending on if the data is single plane. You can change what data you want to us in run_it by altering x
 def make_difference(directories, x, differenceNumber, singleplane):
 	for file in os.listdir(directories[x]): # looks in the folder and makes a list of the directories
 		if singleplane == False: # if data is multi-z plane, looks for the MAX projections
@@ -320,6 +320,19 @@ def make_difference(directories, x, differenceNumber, singleplane):
 		imp.close()
 		dup.close()
 
+# A script to move files around and delete things you don't want
+def clean_up(directories, singleplane):
+	if singleplane == False:
+		print "Deleting " + directories[5]
+		shutil.rmtree(directories[5])
+	elif singleplane == True:
+		print "Deleting MAX directory..."
+		MAX = os.path.join(directories[0], "MAX")
+		shutil.rmtree(MAX)
+		print "Deleting filtered hyperstacks..."
+		for file in glob.glob(os.path.join(directories[5], "C?*")):
+			os.remove(os.path.join(directories[5], file))
+		
 # run_it is the main function that calls all the other functions
 # This is the place to comment out certain function calls if you don't have a need for them
 def run_it():
@@ -373,7 +386,7 @@ def run_it():
 			# makes filtered images. Comment out if you dont want to make any.
 			print "Making filtered movies..."
 			rawFiles = os.listdir(directories[1]) # makes a list of the files in "raw"
-			median_filter(rawFiles, directories, 5) # saves output in temp
+			median_filter(rawFiles, directories, 5) # saves output in filtered
 			print "making filtered max" # max projection of filtered data
 			make_MAX(directories, 3, singleplane) # makes filteredMAX (3 = filteredMAX)
 			applyLut(channels, ch1color, ch2color, ch3color) # apply the user specified LUT(s)
@@ -383,7 +396,7 @@ def run_it():
 			if singleplane == False:
 				merge_channels(basename, channels, directories, 3, "_filtered") # makes filteredMAX merge
 			elif singleplane == True:
-				merge_channels(basename, channels, directories, 5, "_filtered") # for single z-plane (5 = temp)
+				merge_channels(basename, channels, directories, 5, "_filtered") # for single z-plane (5 = filtered)
 
 			# Make difference movies. Uses either filtered MAX projections or filtered hyperstacks (if singleplane == True)
 			if differenceNumber >0:
@@ -391,7 +404,9 @@ def run_it():
 				if singleplane == False:
 					make_difference(directories, 3, differenceNumber, singleplane) # passes filteredMAX directory. Change to 4 if you want rawMAX
 				elif singleplane == True:
-					make_difference(directories, 5, differenceNumber, singleplane) # passes temp directory for filtered hyperstacks. Change to 1 if you want raw
+					make_difference(directories, 5, differenceNumber, singleplane) # passes filtered directory for filtered hyperstacks. Change to 1 if you want raw
+
+			clean_up(directories, singleplane)	# clean up directory structure
 
 			errorFile = open(errorFilePath, "a")
 			errorFile.write("Congrats, it was successful!\n")
