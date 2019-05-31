@@ -322,9 +322,21 @@ def make_difference(directories, x, differenceNumber, singleplane):
 
 # A script to move files around and delete things you don't want
 def clean_up(directories, singleplane):
+
+	# First check for empty directories and delete them
+	for d in directories:
+		if len(os.listdir(d)) == 0:
+			print "Directory ", d, " is empty"
+			shutil.rmtree(d)
+		else:
+			print "Directory ", d, "is not empty"
+
+	# Additionally, if the data is z-stacks, delete the "filtered" directory (because filtered data will be in filteredMAX)
 	if singleplane == False:
 		print "Deleting " + directories[5]
 		shutil.rmtree(directories[5])
+
+	# If the data is single plane, delete the whole MAX folder
 	elif singleplane == True:
 		print "Deleting MAX directory..."
 		MAX = os.path.join(directories[0], "MAX")
@@ -332,7 +344,10 @@ def clean_up(directories, singleplane):
 		print "Deleting filtered hyperstacks..."
 		for file in glob.glob(os.path.join(directories[5], "C?*")):
 			os.remove(os.path.join(directories[5], file))
-		
+
+	# DOWN HERE YOU CAN ADD OTHER DIRECTORIES THAT YOU NEVER USE AND WANT TO DELETE
+	# shutil.rmtree(directories[PUT NUMBER HERE])
+
 # run_it is the main function that calls all the other functions
 # This is the place to comment out certain function calls if you don't have a need for them
 def run_it():
@@ -423,6 +438,7 @@ def run_it():
 			traceback.print_exc(file = errorFile) # writes the error traceback to the file
 			errorFile.close()
 			IJ.run("Close All")
+			clean_up(directories, singleplane)	# clean up directory structure
 			IJ.freeMemory() # runs garbage collector
 			continue # continue on with the next scan, even if the current one threw an error
 
