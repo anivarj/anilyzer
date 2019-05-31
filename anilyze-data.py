@@ -332,7 +332,7 @@ def clean_up(directories, singleplane):
 			print "Directory ", d, "is not empty"
 
 	# Additionally, if the data is z-stacks, delete the "filtered" directory (because filtered data will be in filteredMAX)
-	if singleplane == False:
+	if singleplane == False and os.path.exists(directories[5]):
 		print "Deleting " + directories[5]
 		shutil.rmtree(directories[5])
 
@@ -346,7 +346,8 @@ def clean_up(directories, singleplane):
 			os.remove(os.path.join(directories[5], file))
 
 	# DOWN HERE YOU CAN ADD OTHER DIRECTORIES THAT YOU NEVER USE AND WANT TO DELETE
-	# shutil.rmtree(directories[PUT NUMBER HERE])
+	#if os.path.exists(directories[PUT NUMBER IN HERE]):
+		#shutil.rmtree(directories[PUT NUMBER IN HERE])
 
 # run_it is the main function that calls all the other functions
 # This is the place to comment out certain function calls if you don't have a need for them
