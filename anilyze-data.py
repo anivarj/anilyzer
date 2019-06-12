@@ -258,7 +258,7 @@ def median_filter(rawFiles, directories, x): # all arguments are passed from run
 	image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
 	for i in image_titles:
 		imp = WindowManager.getImage(i)
-		IJ.run(imp, "Median...", "radius =1 stack")
+		IJ.run(imp, "Median...", "radius=1 stack")
 		windowName = WindowManager.getImage(i).getTitle().replace("raw", "filtered") # save as "*_filtered.tif" extension
 		imp.setTitle(windowName)
 		IJ.saveAsTiff(imp, os.path.join(directories[x], windowName)) # saves to filtered directory. Passed the directory from run_it()
@@ -357,7 +357,7 @@ def run_it():
 	now = datetime.datetime.now()
 	errorFile = open(errorFilePath, "w")
 	errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n")
-	errorFile.write("#### anilyze-data -- version 1.1.1 ####" + "\n")
+	errorFile.write("#### anilyze-data -- version 1.1.0 ####" + "\n")
 	#errorFile.write("Here we go...\n")
 	errorFile.close()
 
