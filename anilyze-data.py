@@ -4,7 +4,6 @@
 #@ String(label="Channel 1",choices={"Select", "Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch1color
 #@ String(label="Channel 2",choices={"Select","Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch2color
 #@ String(label="Channel 3",choices={"Select","Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch3color
-#@Boolean(label = "Single z-plane data?") singleplane
 
 """
 ##AUTHOR: Ani Michaud (Varjabedian)
@@ -147,7 +146,7 @@ def make_hyperstack(basename, scan, microscopeType): # basename is defined in ru
 	return basename
 
 # checks for single plane acquisition. Don't need since you ask up front
-#def single_plane_check():
+def single_plane_check():
 	print "Checking for z-planes..."
 	imp = IJ.getImage()
 	if imp.getNSlices() > 1:
@@ -336,14 +335,14 @@ def clean_up(directories, singleplane):
 		print "Deleting " + directories[5]
 		shutil.rmtree(directories[5])
 
-	# If the data is single plane, delete the whole MAX folder
+	# If the data is single plane, delete the whole MAX folder and also the filtered individual channels
 	elif singleplane == True:
 		print "Deleting MAX directory..."
 		MAX = os.path.join(directories[0], "MAX")
 		shutil.rmtree(MAX)
-		print "Deleting filtered hyperstacks..."
-		for file in glob.glob(os.path.join(directories[5], "C?*")):
-			os.remove(os.path.join(directories[5], file))
+		#print "Deleting filtered channels..."
+		#for file in glob.glob(os.path.join(directories[5], "C?*")):
+			#os.remove(os.path.join(directories[5], file))
 
 	# DOWN HERE YOU CAN ADD OTHER DIRECTORIES THAT YOU NEVER USE AND WANT TO DELETE
 	#if os.path.exists(directories[PUT NUMBER IN HERE]):
@@ -387,6 +386,7 @@ def run_it():
 			imp = IJ.getImage() # select the open image
 			channels = imp.getNChannels() #gets the number of channels
 			print "The number of channels is", channels
+			singleplane = single_plane_check()
 			print "The returned value of singleplane is ", singleplane
 			split_channels(directories, channels) # split the hyperstack into channels (skips if channels == 1)
 			make_MAX(directories, 4, singleplane) # make max projection (skips if singleplane == True)
