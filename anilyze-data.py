@@ -53,7 +53,7 @@ def list_scans(experimentFolder, microscopeType):
 	# This section screens out text files and other things that might be in the main experimentFolder, and only makes a list of the actual scan directories
 	# For Bruker microscopes, the scan directories are plain, so os.isdir is used to look for them
 	if microscopeType == "Bruker":
-		for File in os.listdir(experimentFolder):
+		for File in sorted(os.listdir(experimentFolder)):
 			dirpath = os.path.join(experimentFolder, File) # Makes a complete path to the file
 			if os.path.isdir(dirpath): # If the dirpath is a directory, print it and add it to scanList. If it's a file, do not add it.
 				print "dirpath is " + dirpath
@@ -63,7 +63,7 @@ def list_scans(experimentFolder, microscopeType):
 	# If the microscope is "Olympus" type, the directories end in .oif.files, so .endswith needs to be used to find them
 	if microscopeType == "Olympus":
 		oifList = [] # This doesn't look like it was used, so I should delete it in the future once I have verified this.
-		for File in os.listdir(experimentFolder):
+		for File in sorted(os.listdir(experimentFolder)):
 			if File.endswith(".oif.files"): # If the item ends with .oif.files, make the complete path and append it to scanList
 				dirpath = os.path.join(experimentFolder, File)
 				print "dirpath is " + dirpath
