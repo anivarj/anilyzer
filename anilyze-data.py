@@ -345,8 +345,8 @@ def clean_up(directories, singleplane):
 			#os.remove(os.path.join(directories[5], file))
 
 	# DOWN HERE YOU CAN ADD OTHER DIRECTORIES THAT YOU NEVER USE AND WANT TO DELETE
-	#if os.path.exists(directories[PUT NUMBER IN HERE]):
-		#shutil.rmtree(directories[PUT NUMBER IN HERE])
+	# if os.path.exists(directories[4]): # this checks for rawMAX
+	# 	shutil.rmtree(directories[4]) # this removes rawMAX
 
 # run_it is the main function that calls all the other functions
 # This is the place to comment out certain function calls if you don't have a need for them
