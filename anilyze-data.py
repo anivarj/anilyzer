@@ -4,7 +4,6 @@
 #@ String(label="Channel 1",choices={"Select", "Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch1color
 #@ String(label="Channel 2",choices={"Select","Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch2color
 #@ String(label="Channel 3",choices={"Select","Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch3color
-#@Boolean(label = "Single z-plane data?") singleplane
 
 """
 ##AUTHOR: Ani Michaud (Varjabedian)
@@ -54,7 +53,7 @@ def list_scans(experimentFolder, microscopeType):
 	# This section screens out text files and other things that might be in the main experimentFolder, and only makes a list of the actual scan directories
 	# For Bruker microscopes, the scan directories are plain, so os.isdir is used to look for them
 	if microscopeType == "Bruker":
-		for File in os.listdir(experimentFolder):
+		for File in sorted(os.listdir(experimentFolder)):
 			dirpath = os.path.join(experimentFolder, File) # Makes a complete path to the file
 			if os.path.isdir(dirpath): # If the dirpath is a directory, print it and add it to scanList. If it's a file, do not add it.
 				print "dirpath is " + dirpath
@@ -64,7 +63,7 @@ def list_scans(experimentFolder, microscopeType):
 	# If the microscope is "Olympus" type, the directories end in .oif.files, so .endswith needs to be used to find them
 	if microscopeType == "Olympus":
 		oifList = [] # This doesn't look like it was used, so I should delete it in the future once I have verified this.
-		for File in os.listdir(experimentFolder):
+		for File in sorted(os.listdir(experimentFolder)):
 			if File.endswith(".oif.files"): # If the item ends with .oif.files, make the complete path and append it to scanList
 				dirpath = os.path.join(experimentFolder, File)
 				print "dirpath is " + dirpath
@@ -147,7 +146,7 @@ def make_hyperstack(basename, scan, microscopeType): # basename is defined in ru
 	return basename
 
 # checks for single plane acquisition. Don't need since you ask up front
-#def single_plane_check():
+def single_plane_check():
 	print "Checking for z-planes..."
 	imp = IJ.getImage()
 	if imp.getNSlices() > 1:
@@ -336,18 +335,18 @@ def clean_up(directories, singleplane):
 		print "Deleting " + directories[5]
 		shutil.rmtree(directories[5])
 
-	# If the data is single plane, delete the whole MAX folder
+	# If the data is single plane, delete the whole MAX folder and also the filtered individual channels
 	elif singleplane == True:
 		print "Deleting MAX directory..."
 		MAX = os.path.join(directories[0], "MAX")
 		shutil.rmtree(MAX)
-		print "Deleting filtered hyperstacks..."
-		for file in glob.glob(os.path.join(directories[5], "C?*")):
-			os.remove(os.path.join(directories[5], file))
+		#print "Deleting filtered channels..."
+		#for file in glob.glob(os.path.join(directories[5], "C?*")):
+			#os.remove(os.path.join(directories[5], file))
 
 	# DOWN HERE YOU CAN ADD OTHER DIRECTORIES THAT YOU NEVER USE AND WANT TO DELETE
-	#if os.path.exists(directories[PUT NUMBER IN HERE]):
-		#shutil.rmtree(directories[PUT NUMBER IN HERE])
+	# if os.path.exists(directories[4]): # this checks for rawMAX
+	# 	shutil.rmtree(directories[4]) # this removes rawMAX
 
 # run_it is the main function that calls all the other functions
 # This is the place to comment out certain function calls if you don't have a need for them
@@ -357,7 +356,7 @@ def run_it():
 	now = datetime.datetime.now()
 	errorFile = open(errorFilePath, "w")
 	errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n")
-	errorFile.write("#### anilyze-data -- version 1.1.2 ####" + "\n")
+	errorFile.write("#### anilyze-data -- version 1.1.3 ####" + "\n")
 	#errorFile.write("Here we go...\n")
 	errorFile.close()
 
@@ -387,6 +386,7 @@ def run_it():
 			imp = IJ.getImage() # select the open image
 			channels = imp.getNChannels() #gets the number of channels
 			print "The number of channels is", channels
+			singleplane = single_plane_check()
 			print "The returned value of singleplane is ", singleplane
 			split_channels(directories, channels) # split the hyperstack into channels (skips if channels == 1)
 			make_MAX(directories, 4, singleplane) # make max projection (skips if singleplane == True)
