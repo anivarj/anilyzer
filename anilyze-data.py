@@ -356,7 +356,7 @@ def run_it():
 	now = datetime.datetime.now()
 	errorFile = open(errorFilePath, "w")
 	errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n")
-	errorFile.write("#### anilyze-data -- version 1.1.3 ####" + "\n")
+	errorFile.write("#### anilyze-data -- version 1.1.3 beta ####" + "\n")
 	#errorFile.write("Here we go...\n")
 	errorFile.close()
 
