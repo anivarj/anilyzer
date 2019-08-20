@@ -1,14 +1,10 @@
 # @File(label = "Input directory", style = "directory") experimentFolder
-# @Integer(label = "Slices to remove for difference movie", value = 4) differenceNumber
-#@ String (visibility=MESSAGE, value="Please select your channel colors. If you have one channel, assign it to Channel 1.") msg
-#@ String(label="Channel 1",choices={"Select", "Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch1color
-#@ String(label="Channel 2",choices={"Select","Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch2color
-#@ String(label="Channel 3",choices={"Select","Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch3color
+# @File(label = "Output directory", style = "directory") saveFolder
 
 """
 ##AUTHOR: Ani Michaud (Varjabedian)
 
-## DESCRIPTION: This script is for automating common Fiji processing commands for imaging datasets. See README for the general overview.
+## DESCRIPTION: This branch is a stripped down version of the anilyzer. All it does is open hyperstacks, max project everything, and saves the max projection in an output folder.
 
 The organization of this code is as follows:
 
@@ -32,6 +28,8 @@ import datetime
 import fnmatch
 
 experimentFolder = str(experimentFolder) # Converts the input directory you chose to a path string that can be used later on
+
+saveFolder = str(saveFolder)
 
 # Microscope_check assesses the file structure of the experimentFolder and assigns a "microscope type" which gets passed to other functions. This helps with determining where certain files and directories should be located.
 def microscope_check(experimentFolder):
@@ -187,7 +185,8 @@ def make_MAX(directories, x, singleplane): # singleplane is Boolean True/False
 			IJ.run(imp, "Z Project...", "projection=[Max Intensity] all")
 			imp = WindowManager.getImage("MAX_" + i)
 			windowName = imp.getTitle()
-			IJ.saveAsTiff(imp, os.path.join(directories[x], windowName)) #saves to appropriate MAX directory (rawMAX or filteredMAX). Passed from run_it()
+			nameOnly = os.path.splitext(windowName)[0]
+			IJ.saveAsTiff(imp, os.path.join(saveFolder, nameOnly + "_Max")) #saves to saveFolder
 			imp = WindowManager.getImage(i) # Gets the original hyperstack
 			imp.changes = False # Answers "no" to the dialog asking if you want to save any changes
 			imp.close() # Closes the hyperstack
@@ -388,39 +387,42 @@ def run_it():
 			print "The number of channels is", channels
 			singleplane = single_plane_check()
 			print "The returned value of singleplane is ", singleplane
-			split_channels(directories, channels) # split the hyperstack into channels (skips if channels == 1)
+			#split_channels(directories, channels) # split the hyperstack into channels (skips if channels == 1)
 			make_MAX(directories, 4, singleplane) # make max projection (skips if singleplane == True)
-			applyLut(channels, ch1color, ch2color, ch3color) # apply the user specified LUT(s)
 
-			# calls merge_channels for raw data (skips if singleplane == True)
-			print "Making raw merge..."
-			if singleplane == False:
-				merge_channels(basename, channels, directories, 4, "_raw") # makes rawMAX merge (4 = rawMax)
-			elif singleplane == True:
-				merge_channels(basename, channels, directories, 1, "_raw") # for single z-plane (1 = raw)
+			IJ.run("Close All")
 
-			# makes filtered images. Comment out if you dont want to make any.
-			print "Making filtered movies..."
-			rawFiles = os.listdir(directories[1]) # makes a list of the files in "raw"
-			median_filter(rawFiles, directories, 5) # saves output in filtered
-			print "making filtered max" # max projection of filtered data
-			make_MAX(directories, 3, singleplane) # makes filteredMAX (3 = filteredMAX)
-			applyLut(channels, ch1color, ch2color, ch3color) # apply the user specified LUT(s)
-			print "Making filtered merge..."
-
-			# # calls merge_channels for filtered data (skips if singleplane == True)
-			if singleplane == False:
-				merge_channels(basename, channels, directories, 3, "_filtered") # makes filteredMAX merge
-			elif singleplane == True:
-				merge_channels(basename, channels, directories, 5, "_filtered") # for single z-plane (5 = filtered)
-
-			# Make difference movies. Uses either filtered MAX projections or filtered hyperstacks (if singleplane == True)
-			if differenceNumber >0:
-				print "Making difference movies..."
-				if singleplane == False:
-					make_difference(directories, 3, differenceNumber, singleplane) # passes filteredMAX directory. Change to 4 if you want rawMAX
-				elif singleplane == True:
-					make_difference(directories, 5, differenceNumber, singleplane) # passes filtered directory for filtered hyperstacks. Change to 1 if you want raw
+			# applyLut(channels, ch1color, ch2color, ch3color) # apply the user specified LUT(s)
+			#
+			# # calls merge_channels for raw data (skips if singleplane == True)
+			# print "Making raw merge..."
+			# if singleplane == False:
+			# 	merge_channels(basename, channels, directories, 4, "_raw") # makes rawMAX merge (4 = rawMax)
+			# elif singleplane == True:
+			# 	merge_channels(basename, channels, directories, 1, "_raw") # for single z-plane (1 = raw)
+			#
+			# # makes filtered images. Comment out if you dont want to make any.
+			# print "Making filtered movies..."
+			# rawFiles = os.listdir(directories[1]) # makes a list of the files in "raw"
+			# median_filter(rawFiles, directories, 5) # saves output in filtered
+			# print "making filtered max" # max projection of filtered data
+			# make_MAX(directories, 3, singleplane) # makes filteredMAX (3 = filteredMAX)
+			# applyLut(channels, ch1color, ch2color, ch3color) # apply the user specified LUT(s)
+			# print "Making filtered merge..."
+			#
+			# # # calls merge_channels for filtered data (skips if singleplane == True)
+			# if singleplane == False:
+			# 	merge_channels(basename, channels, directories, 3, "_filtered") # makes filteredMAX merge
+			# elif singleplane == True:
+			# 	merge_channels(basename, channels, directories, 5, "_filtered") # for single z-plane (5 = filtered)
+			#
+			# # Make difference movies. Uses either filtered MAX projections or filtered hyperstacks (if singleplane == True)
+			# if differenceNumber >0:
+			# 	print "Making difference movies..."
+			# 	if singleplane == False:
+			# 		make_difference(directories, 3, differenceNumber, singleplane) # passes filteredMAX directory. Change to 4 if you want rawMAX
+			# 	elif singleplane == True:
+			# 		make_difference(directories, 5, differenceNumber, singleplane) # passes filtered directory for filtered hyperstacks. Change to 1 if you want raw
 
 			clean_up(directories, singleplane)	# clean up directory structure
 
