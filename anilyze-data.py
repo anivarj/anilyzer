@@ -1,9 +1,9 @@
 # @File(label = "Input directory", style = "directory") experimentFolder
 # @Integer(label = "Slices to remove for difference movie", value = 4) differenceNumber
 #@ String (visibility=MESSAGE, value="Please select your channel colors. If you have one channel, assign it to Channel 1.") msg
-#@ String(label="Channel 1",choices={"Select", "Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch1color
-#@ String(label="Channel 2",choices={"Select","Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch2color
-#@ String(label="Channel 3",choices={"Select","Red", "Green", "Blue", "Grays"}, value = "Select", persist=false) ch3color
+#@ String(label="Channel 1",choices={"Select", "Red", "Magenta", "Green", "Cyan", "Blue", "Grays"}, value = "Select", persist=false) ch1color
+#@ String(label="Channel 2",choices={"Select","Red", "Magenta", "Green", "Cyan", "Blue", "Grays"}, value = "Select", persist=false) ch2color
+#@ String(label="Channel 3",choices={"Select","Red", "Magenta", "Green", "Cyan", "Blue", "Grays"}, value = "Select", persist=false) ch3color
 
 """
 ##AUTHOR: Ani Michaud (Varjabedian)
