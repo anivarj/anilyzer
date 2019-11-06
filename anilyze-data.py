@@ -122,14 +122,19 @@ def make_hyperstack(basename, scan, microscopeType): # basename is defined in ru
 		initiatorFilePath = initiatorFilePath[0] # Takes the first item in the list. This is the file that will get passed to bioformats importer
 		print "Opening file", initiatorFilePath
 
-	IJ.run("Bio-Formats Importer", "open=[" + initiatorFilePath + "] color_mode=Grayscale concatenate_series open_all_series rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT")
+	IJ.run("Bio-Formats Importer", "open=[" + initiatorFilePath + "] color_mode=Grayscale concatenate_series open_all_series quiet rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT")
 	print "File opened"
 
 	# Get a list of the windows that are open
-	image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
+	try:
+		image_titles = [WindowManager.getImage(id).getTitle() for id in WindowManager.getIDList()]
+	except TypeError:
+		raise TypeError("No windows open! Bio-formats failed. Check metadata for completeness.")
+		return
 
-#Checks to see if multiple windows are open. There should only be one hyperstack. If there are multiple, it will close windows with a single frame (because it sees them as partial slices).
-# If you have single z-stack data but somehow also have a partial slice, this might close everything (seems like a rare situation though).
+	#Checks to see if multiple windows are open. There should only be one hyperstack. If there are multiple, it will close windows with a single frame (because it sees them as partial slices).
+	# If you have single z-stack data but somehow also have a partial slice, this might close everything (seems like a rare situation though).
+
 	if len(image_titles) > 1:
 		for i in image_titles:
 			print i
@@ -141,6 +146,7 @@ def make_hyperstack(basename, scan, microscopeType): # basename is defined in ru
 	except TypeError:
 		raise Exception("No windows open! Is this a single slice acquisition?")
 		return
+
 	imp = IJ.getImage()
 	imp.setTitle(basename + "_raw.tif")
 	return basename
@@ -356,7 +362,7 @@ def run_it():
 	now = datetime.datetime.now()
 	errorFile = open(errorFilePath, "w")
 	errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n")
-	errorFile.write("#### anilyze-data -- version 1.1.3 beta ####" + "\n")
+	errorFile.write("#### anilyze-data  ####" + "\n")
 	#errorFile.write("Here we go...\n")
 	errorFile.close()
 
@@ -439,7 +445,7 @@ def run_it():
 			traceback.print_exc(file = errorFile) # writes the error traceback to the file
 			errorFile.close()
 			IJ.run("Close All")
-			clean_up(directories, singleplane)	# clean up directory structure
+			#clean_up(directories, singleplane)	# clean up directory structure
 			IJ.freeMemory() # runs garbage collector
 			continue # continue on with the next scan, even if the current one threw an error
 
