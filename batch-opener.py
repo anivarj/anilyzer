@@ -91,10 +91,11 @@ def run_it():
 		directories = define_directories(scan) # get paths to the directories
 		basename = os.path.basename(scan) # get the scan name (basename)
 		print "Opening " + basename
-		files = os.listdir(directories[3]) # makes a list of all the files in filteredMAX directory
+		files = os.listdir(directories[4]) # makes a list of all the files in rawMAX directory
 		for f in files: # finds the MAX projections and only opens them (skips merged)
-			if fnmatch.fnmatch(f, "MAX_C*"): #finds MAX projections. change if you only want 1 channel
-				IJ.open(os.path.join(directories[3], f))
+			if fnmatch.fnmatch(f, "MAX_C1*"): #finds MAX projections. change if you only want 1 channel
+				IJ.open(os.path.join(directories[4], f))
+				IJ.run("Out [-]", f) #zoom out one level
 
 
 run_it()
