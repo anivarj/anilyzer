@@ -12,42 +12,32 @@
         <relativePath/>
     </parent>
 
-    <groupId>de.mpicbg.scf</groupId>
-    <artifactId>run_jython_scripts_from_ide</artifactId>
+    <groupId>anilyzer</groupId>
+    <artifactId>anilyze-data</artifactId>
     <version>1.0.0</version>
 
-    <name>run_jython_scripts_from_ide</name>
+    <name>anilyzer</name>
     <description>
-        run_jython_scripts_from_ide
+        [ENTER DESCRIPTION]
     </description>
-    <url>none</url>
+    <url>https://github.com/[MY-ORG]/[MY-REPO]</url>
     <inceptionYear>2017</inceptionYear>
     <organization>
-        <name>MPI CBG</name>
-        <url>https://www.mpi-cbg.de/services-facilities/core-facilities/scientific-computing-facility/services/</url>
+        <name>[MY-ORGANIZATION-NAME]</name>
+		<url>[MY-ORGANIZATION-WEB-SITE]</url>
     </organization>
     <licenses>
         <license>
-            <name>BSD License Version 3</name>
-            <distribution>repo</distribution>
+            <name>CC0 1.0 Universal License</name>
+			<url>https://creativecommons.org/publicdomain/zero/1.0/</url>
+			<distribution>repo</distribution>
         </license>
     </licenses>
     <developers>
         <developer>
-            <id>haesleinhuepf</id>
-            <name>Robert Haase</name>
-            <email>rhaase@mpi-cbg.de</email>
-            <organization>Scientific Computing Facility, MPI CBG Dresden</organization>
-            <url>https://github.com/haesleinhuepf</url>
-            <roles>
-                <role>founder</role>
-                <role>lead</role>
-                <role>developer</role>
-                <role>debugger</role>
-                <role>reviewer</role>
-                <role>support</role>
-                <role>maintainer</role>
-            </roles>
+            <id>[MY-GITHUB-ID]</id>
+			<name>[MY-FULL-NAME]</name>
+			<url>https://imagej.net/User:[MY-IMAGEJ-WIKI-ACCOUNT]</url>
         </developer>
     </developers>
     <contributors>
@@ -98,15 +88,9 @@
             <groupId>net.imagej</groupId>
             <artifactId>ij</artifactId>
         </dependency>
-
         <dependency>
             <groupId>net.imagej</groupId>
             <artifactId>imagej-legacy</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
         </dependency>
 
     </dependencies>
