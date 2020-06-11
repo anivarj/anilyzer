@@ -405,28 +405,28 @@ def run_it():
 			elif singleplane == True:
 				merge_channels(basename, channels, directories, 1, "_raw") # for single z-plane (1 = raw)
 
-			# makes filtered images. Comment out if you dont want to make any.
-			print "Making filtered movies..."
-			rawFiles = os.listdir(directories[1]) # makes a list of the files in "raw"
-			median_filter(rawFiles, directories, 5) # saves output in filtered
-			print "making filtered max" # max projection of filtered data
-			make_MAX(directories, 3, singleplane) # makes filteredMAX (3 = filteredMAX)
-			applyLut(channels, ch1color, ch2color, ch3color) # apply the user specified LUT(s)
-			print "Making filtered merge..."
+			## makes filtered images. Comment out if you dont want to make any.
+			#print "Making filtered movies..."
+			#rawFiles = os.listdir(directories[1]) # makes a list of the files in "raw"
+			#median_filter(rawFiles, directories, 5) # saves output in filtered
+			#print "making filtered max" # max projection of filtered data
+			#make_MAX(directories, 3, singleplane) # makes filteredMAX (3 = filteredMAX)
+			#applyLut(channels, ch1color, ch2color, ch3color) # apply the user specified LUT(s)
+			#print "Making filtered merge..."
 
-			# # calls merge_channels for filtered data (skips if singleplane == True)
-			if singleplane == False:
-				merge_channels(basename, channels, directories, 3, "_filtered") # makes filteredMAX merge
-			elif singleplane == True:
-				merge_channels(basename, channels, directories, 5, "_filtered") # for single z-plane (5 = filtered)
+			## # calls merge_channels for filtered data (skips if singleplane == True)
+			#if singleplane == False:
+			#	merge_channels(basename, channels, directories, 3, "_filtered") # makes filteredMAX merge
+			#elif singleplane == True:
+			#	merge_channels(basename, channels, directories, 5, "_filtered") # for single z-plane (5 = filtered)
 
 			# Make difference movies. Uses either filtered MAX projections or filtered hyperstacks (if singleplane == True)
 			if differenceNumber >0:
 				print "Making difference movies..."
 				if singleplane == False:
-					make_difference(directories, 3, differenceNumber, singleplane) # passes filteredMAX directory. Change to 4 if you want rawMAX
+					make_difference(directories, 4, differenceNumber, singleplane) # passes rawMAX directory. Change to 3 if you want filteredMAX
 				elif singleplane == True:
-					make_difference(directories, 5, differenceNumber, singleplane) # passes filtered directory for filtered hyperstacks. Change to 1 if you want raw
+					make_difference(directories, 1, differenceNumber, singleplane) # passes raw directory for raw hyperstacks. Change to 5 if you want filtered
 
 			clean_up(directories, singleplane)	# clean up directory structure
 
