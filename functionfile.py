@@ -1,9 +1,5 @@
 # @File(label = "Input directory", style = "directory") experimentFolder
-# @Integer(label = "Slices to remove for difference movie", value = 4) differenceNumber
-#@ String (visibility=MESSAGE, value="Please select your channel colors. If you have one channel, assign it to Channel 1.") msg
-#@ String(label="Channel 1",choices={"Select", "Red", "Magenta", "Green", "Cyan", "Blue", "Grays"}, value = "Select", persist=false) ch1color
-#@ String(label="Channel 2",choices={"Select","Red", "Magenta", "Green", "Cyan", "Blue", "Grays"}, value = "Select", persist=false) ch2color
-#@ String(label="Channel 3",choices={"Select","Red", "Magenta", "Green", "Cyan", "Blue", "Grays"}, value = "Select", persist=false) ch3color
+# @Integer(label = "Slices to remove for difference movie", value = 0) differenceNumber
 
 """
 ##AUTHOR: Ani Michaud (Varjabedian)
@@ -33,18 +29,16 @@ import fnmatch
 
 experimentFolder = str(experimentFolder) # Converts the input directory you chose to a path string that can be used later on
 
-# Microscope_check assesses the file structure of the experimentFolder and assigns a "microscope type" which gets passed to other functions. This helps with determining where certain files and directories should be located.
-def microscope_check(experimentFolder):
-	#If it finds .oif files inside the main folder, it calls the microscope "Olympus"
-	if any(File.endswith(".oif") for File in os.listdir(experimentFolder)):
-		print(".oif files present, running Olympus pipeline")
-		microscopeType = "Olympus"
-		return microscopeType #returns microscopeType to run_it()
-	else:
-		#If there are no .oif files in the main folder, it calls the microscope "Bruker"
-		print("No .oif files present, running Bruker pipeline")
-		microscopeType = "Bruker"
-		return microscopeType #returns microscopeType to run_it()
+
+def make_log(experimentFolder):
+	# Make an error log file that can be written to
+	errorFilePath = os.path.join(experimentFolder, "errorFile.txt")
+	now = datetime.datetime.now()
+	errorFile = open(errorFilePath, "w")
+	errorFile.write("\n" + now.strftime("%Y-%m-%d %H:%M") + "\n")
+	errorFile.write("#### anilyze-data  ####" + "\n")
+	errorFile.close()
+
 
 # list_scans gets a list of all scan folders inside the experimentFolder you selected, and saves them as a list called scanList.
 def list_scans(experimentFolder, microscopeType):
